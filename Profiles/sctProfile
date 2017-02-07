@@ -1,0 +1,49 @@
+<profile>
+	<var>
+		<name>Shellcode</name>
+			<val>Cobalt Strike</val>
+			<opt>Cobalt Strike</opt>
+			<opt>Empire</opt>
+			<opt>Meterpreter</opt>
+	</var>
+	
+	<var>
+		<name>Staging Method</name>
+			<val>regsvr32.exe</val>
+			<opt>regsvr32.exe</opt>
+			<opt>VBscript GetObject()</opt>
+			<opt>VBA Macro</opt>
+	</var>
+
+	<var>
+		<name>IP</name>
+			<val>127.0.0.1</val>
+			<opt>*</opt>
+	</var>
+
+	<var>
+		<name>Port</name>
+			<val>80</val>
+			<opt>*</opt>
+	</var>
+
+	<var>
+		<name>Process</name>
+			<val>rundll32.exe</val>
+			<opt>*</opt>
+	</var>
+
+	<var>
+		<name>Disable SSL Caching</name>
+		<val>False</val>
+		<opt>False</opt>
+		<opt>True</opt>
+	</var>
+	
+	<template>
+		TestTemplate
+	</template>
+
+
+
+</profile>
