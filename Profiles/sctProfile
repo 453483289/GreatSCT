@@ -41,7 +41,20 @@
 	</var>
 	
 	<template>
-		TestTemplate
+			<?XML version="1.0"?>
+			<scriptlet>
+				<registration progid="exampleprogid" classid="{exampleclassid}" >
+					<script language="vbscript">
+						<![CDATA[
+						' Insert Shellcode
+						' Insert Staging Method
+						' Insert IP
+						' Insert Port
+						' Insert Process
+						]]>
+					</script>
+				</registration>
+			</scriptlet>	
 	</template>
 
 
