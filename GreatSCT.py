@@ -7,7 +7,7 @@ def main():
 	activeModule = '';
 
 	display = Display();
-
+	input();
 	entry = '';
 	while entry != 'quit':
 		if entry == 'profile' or activeModule == '':
