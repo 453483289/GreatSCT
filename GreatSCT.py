@@ -47,8 +47,12 @@ def profileSelection(profiles, entry):
 
 	return(selectedModule);
 
+
+
 def showHelp():
 	display.help();
+
+
 
 def showModule(activeModule, entry):
 	display.showOptions(activeModule['options']);
@@ -57,9 +61,8 @@ def showModule(activeModule, entry):
 	optionSelected = None;
 	if entry.isdigit():
 		if int(entry) < len(activeModule['options']):
-			display.show("\nEdit Option {0}:  {1}, Allowed Values: {2}".format(entry, 
-											    activeModule['options'][int(entry)], 
-											    activeModule['allowedValues'][int(entry)]));
+			display.show("\nEdit Option {0}:  {1}, Allowed Values: ".format(entry, 
+											    activeModule['options'][int(entry)]));
 			optionSelected = entry;
 
 	return(optionSelected);			
@@ -70,20 +73,22 @@ def showModule(activeModule, entry):
 def editOption(activeModule, selectedOption, entry):
 	#behold the worlds most efficient, most easily parseable function
 	#2/13/2016 it just keeps getting better
-
-	options = list(activeModule['allowedValues'][int(selectedOption)].values())[0];
+	"""options = list(activeModule['allowedValues'][int(selectedOption)].values())[0];
 	option_list = [x[0] for x in options];
 	if entry in option_list or '*' in option_list:	
 		activeModule['options'][int(selectedOption)][list((activeModule['options'][int(selectedOption)]).keys())[0]] = entry #FUCK YOU SLEEP, FUCK YOU EFFICIENCY, IT WORKS SO I WIN
 	else:
 		display.error("Entry Invalid for this option");
-
-
-
+	"""
+	option = activeModule['options'][int(selectedOption)];
+	allowedVals = activeModule['allowedValues'][option[0]];
+	if entry in allowedVals or '*' in allowedVals:
+		activeModule['options'][int(selectedOption)] = (option[0], entry);
+		
 def generate(activeModule):
 	#Just when I thought it couldn't get better I bested myself
 	#This one's now O(x^3) for those keeping score (profile storage format may need a slight rework)
-	for pair in activeModule['options']:
+	"""for pair in activeModule['options']:
 		option = list(pair.keys())[0];
 		value = list(pair.values())[0];
 		alias = None;	
@@ -102,8 +107,33 @@ def generate(activeModule):
 					alias = value
 				activeModule['template'][i] = alias;
 
-
 	fileops.export(activeModule['template']);
+	"""
+
+	template = activeModule['template'];
+	tagIndicies = [];
+	for i, tag in enumerate(template):
+		if "<_" in tag and "_>" in tag:
+			tagIndicies.append(i);
+
+	#"There's no concept of pointers on python" If it runs on x86 yes there is, your crappy language just doesn't give me access to them
+	for pair in activeModule['options']:					#(Shellcode, CobaltStrike)
+		option = pair[0];						#Shellcode
+		value = pair[1];
+		alias = None;						#CobaltStrike
+		aliasVals = activeModule['allowedValues'][option]			#{Shellcode: {CobaltStrike: alias}, Redirector: ,}
+		if value in aliasVals.keys():					#{CobaltStrike, Empire}
+			alias = aliasVals[value];
+		elif '*' in aliasVals.keys():
+			alias = value;
+		for i in tagIndicies:
+			print(template[i]);
+			print('<_'+option+'_>');
+			if '<_'+option+'_>' in template[i]:
+				template[i] =  alias;
+	
+	fileops.export(template);	
+		
 
 if __name__ == "__main__":
 	main();
