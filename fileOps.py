@@ -36,10 +36,11 @@ class FileOps():
 	def getCurrentConfig(self):
 		return(FileOps.selectedConfig)
 
-	def loadTemplate(self, config):
+	def generate(self, config):
 		template = ConfigParser(interpolation = ExtendedInterpolation())
 		template.optionxform = str
 		template.read("./template/SCT/regsvr32.template")
+
 		self.genFromTemplate(template)
 		
 	def genFromTemplate(self, template):
@@ -48,19 +49,22 @@ class FileOps():
 		domain = ''
 		port = ''
 		params = []
+		outfile = "output.gr8sct"
 
 		for config_section in FileOps.selectedConfig:
 			if config_section != "DEFAULT" and config_section != "Type":
-				print(config_section)
 				var = FileOps.selectedConfig[config_section]["var"]
 				params.append([config_section, var])
-			
+
+			if config_section == "Output":
+				outfile = FileOps.selectedConfig[config_section]["var"]		
+	
 			if config_section == "Framework":
 				framework = FileOps.selectedConfig[config_section]["var"]
 			elif config_section == "Redirector Domain":
-				domain= FileOps.selectedConfig[config_section]["var"]
+				domain = FileOps.selectedConfig[config_section]["var"]
 			elif config_section == "Redirector Port":
-				port= FileOps.selectedConfig[config_section]["var"]
+				port = FileOps.selectedConfig[config_section]["var"]
 
 
 		generator = Generator()
@@ -78,21 +82,13 @@ class FileOps():
 		
 		shellcode = template.get("ShellCode", "value")	
 		payload = template.get("Template", "data")
-		print(payload)
+		#print(payload)
+
+		return FileOps.selectedConfig["Type"]["RunInfo"]
 		
 			
 					
 					
 			
 					
-		#generator = Generator()
-		#generator.genShellcode("metasploit", "test.com", "9999")
 
-	"""	for section_name in template:
-			print(section_name)
-			section = template[section_name]
-			for param in section:
-				if param == "generator":
-					print(section["generator"])
-					section["value"] = eval(section["generator"])
-					print(section["value"])"""

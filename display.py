@@ -5,8 +5,20 @@ import os
 This module is used for displaying information and interactive cli.
 '''
 
+class Color:
+	colorMap = {"GREEN": "\033[92m", "RED": "\033[31m", "ENDC": "\033[0m"}
+	
+	def setColor(self, text, color):
+		try:
+			text = "{0}{1}{2}".format(self.colorMap[color], text, self.colorMap["ENDC"])
+		except KeyError:	#supplied nondefined color
+			text = text
+
+		return text
+
 
 class Display:
+	color = Color()
 	clearCMD = ''	
 	intro = """                     ______,------'--"-.
                     /                    \                 
@@ -58,12 +70,14 @@ Lopi                                               Dietrich
 			Display.clearCMD = 'clear'
 
 		self.clear()
+	
 		print(self.intro)
 
 	def clear(self):
 		os.system(Display.clearCMD)
 
-	def prompt(self, item, term="\n"):
+	def prompt(self, item, color="ENDC", term="\n"):
+		item = self.color.setColor(item, color)
 		print(item, end=term)
 
 """
@@ -164,8 +178,4 @@ Lopi                                               Dietrich
 			]
 
 		return completions
-<<<<<<< HEAD
 """	
-=======
-	
->>>>>>> b626443d26a3362192f98f7d48fe4a0726d66b14

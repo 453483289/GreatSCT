@@ -33,7 +33,7 @@ class Intro(State):
 	def firstRun(self):
 		display.clear()
 		display.init()
-		display.prompt("Enter any key to begin:", ' ')
+		display.prompt("Enter any key to begin, \"help\", or \"exit\" at any time:", "GREEN", ' ')
 		input()
 		self.run()
 
@@ -43,10 +43,11 @@ class Intro(State):
 
 		configs = fileOps.getConfigs()
 		for i, f in enumerate(configs):
-			display.prompt("\t[{0}]  {1}".format(i, f))
+			display.prompt("\t[{0}]  ".format(i), "GREEN", '')
+			display.prompt(f)
 			self.transMap[f] = "ConfigEdit"
 
-		display.prompt("\nPlease select a module to use, or \"help\" for more options:", ' ')
+		display.prompt("\nPlease select a module to use: ", '', '')
 
 		selection = input()
 		if selection.isdigit():
@@ -56,7 +57,7 @@ class Intro(State):
 		self.transition(selection)	
 
 class ConfigEdit(State):
-	transMap = {"exit": "Menu", "menu": "Menu", "generate": "GenerationPrompt"}	
+	transMap = {"exit": "Exit", "menu": "Menu", "generate": "GenerationPrompt"}	
 	optionsMap = {}	#will become a dict of {"0": "optionA" "1": "optionB"}
 			#allows number input since the 0th actual content of config
 			#will likely be DEFAULT, help or type data	
@@ -69,7 +70,11 @@ class ConfigEdit(State):
 
 		self.parse(config)	
 
-		display.prompt("Select an option to edit, generate, or exit:", " ")
+		display.prompt("Select an option to edit, ", '', '')
+		display.prompt("generate", "GREEN", '')
+		display.prompt(", or ", '', '')
+		display.prompt("exit", "GREEN", '')
+		display.prompt(": ", '', '')
 
 		selection = input()
 		
@@ -104,7 +109,8 @@ class ConfigEdit(State):
 				display.prompt("Selected Payload: {0}\n".format(section["name"]))
 
 			else:
-				display.prompt("\t[{0}] {1}:\t{2}".format(optionNum, section_name, section["var"]))
+				display.prompt("\t[{0}] {1}:".format(optionNum, section_name), "GREEN", '')
+				display.prompt("\t{0}".format(section["var"]))
 				self.transMap[section_name] = "OptionEdit"
 				self.optionsMap[chr(optionNum+48)] = section_name
 				optionNum += 1
@@ -113,7 +119,7 @@ class ConfigEdit(State):
 		display.prompt("")
 
 class OptionEdit(State):
-	transMap = {"ConfigEdit": "ConfigEdit"}
+	transMap = {"exit": "Exit", "ConfigEdit": "ConfigEdit"}
 
 	validParams = []
 	
@@ -123,7 +129,16 @@ class OptionEdit(State):
 		self.validParams = self.parseOptions(option)
 
 		if self.suppliedVal == None:
-			display.prompt("Enter a value for [{0}]: (Valid options are: {1}):".format(self.selection, self.validParams), " ")
+			display.prompt("Enter a value for [{0}]: (Valid options are: ".format(self.selection), '', '')
+			for param in self.validParams:
+				display.prompt("\'", '', '')
+				display.prompt(param, "GREEN", '')
+				display.prompt("\'", '', '')
+				
+				if param != self.validParams[-1]:
+					display.prompt(', ', '', '')
+			display.prompt("]): ", '', '')			
+
 			self.suppliedVal = input()
 
 		if self.suppliedVal in self.validParams or "allowWilds" in self.validParams:
@@ -153,7 +168,8 @@ class GenerationPrompt(State):
 	def run(self):
 
 		config = fileOps.getCurrentConfig()
-		template =  fileOps.loadTemplate(config)
+		info = fileOps.generate(config)
+		display.prompt(info, '', '')
 		
 
 class Help(State):
@@ -168,7 +184,10 @@ class Help(State):
 		input()
 		self.transition(self.prevState)
 
+class Exit(State):
 
+	def run(self):
+		exit(0)
 	
 		
 
@@ -179,7 +198,13 @@ def main():
 
 
 if __name__ == '__main__':
-	#try:
+	try:
 		main()
 
-	#except
+	except KeyboardInterrupt:
+		print('')
+		exit(0)
+	
+	except EOFError:
+		print('')
+		exit(0)
