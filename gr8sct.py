@@ -1,12 +1,13 @@
 from display import *
 from fileOps import *
 
+import threading
+import time
+
 configDir = "./config/"
 
 display = Display()
 fileOps = FileOps(configDir)
-
-
 
 class State():
 	prevState = None
@@ -166,10 +167,25 @@ class OptionEdit(State):
 class GenerationPrompt(State):
 
 	def run(self):
-
+		
 		config = fileOps.getCurrentConfig()
-		info = fileOps.generate(config)
-		display.prompt(info, '', '')
+		t1 = threading.Thread(target = fileOps.generate, args = [config])
+
+		t1.start()
+
+		i = 1
+		end = ['/', '-', '\\', '|']
+		while t1.is_alive():
+			display.prompt("Generating: "+"="*i+end[i%4], '', '\r')
+			time.sleep(0.3)
+			i = i+1
+
+		t1.join()
+		display.prompt("Generating: "+"="*i+" :D", 'GREEN', '\n')
+
+		info = config["Type"]["runInfo"]
+		display.prompt("Execute with: ", "GREEN", '')
+		display.prompt(info, '', '\n\n')
 		
 
 class Help(State):
@@ -189,7 +205,6 @@ class Exit(State):
 	def run(self):
 		exit(0)
 	
-		
 
 def main():
 	intro = Intro()
