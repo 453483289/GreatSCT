@@ -1,5 +1,7 @@
 [Type]
-name: COM Scriptlet (SCT) using regsvr32.exe
+name: Get Object
+template: ./template/SCT/getObject.template
+runInfo: regsvr32.exe \u \n \i:${Output:var} scrobj.dll
 
 [Framework]
 var: Metasploit
@@ -7,28 +9,20 @@ Metasploit: test
 Empire: test
 Cobalt Strike: test
 
-[StagingMethod]
-var: VBAMacro
-regsvr32: regsvr32.exe
-VBGetObject: VBgetObject()
-VBAMacro: Excel
-JSGetObject: JSgetObject()
-VBScriptCreateObject: CreateObject()
-
-[Redirector Domain]
+[RedirectorDomain]
 var: 127.0.0.1
 allowWilds: True
 
-[Redirector Port]
+[RedirectorPort]
 var: 80
 allowWilds: True
 forceInteger: true
 
-[Process x86]
+[Processx86]
 var: userinit.exe
 allowWilds: True
 
-[Process x64]
+[Processx64]
 var: userinit.exe
 allowWilds: True
 
@@ -36,3 +30,12 @@ allowWilds: True
 var: 1111-1111-1111-1111
 allowWilds: True
 random: True
+
+[ClassID]
+var: 1111-1111-1111-1111
+allowWilds: True
+random: True
+
+[Output]
+var: output.sct
+allowWilds: true

