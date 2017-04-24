@@ -24,7 +24,7 @@ class FileOps():
 		return(FileOps.configDir)
 
 	def loadConfig(self, configName):
-		FileOps.selectedConfig = ConfigParser(interpolation = ExtendedInterpolation())
+		FileOps.selectedConfig = ConfigParser(interpolation = ExtendedInterpolation(), comment_prefixes = None)
 		FileOps.selectedConfig.optionxform = str #disable configparser convert data to lowercase
 		FileOps.selectedConfig.read("{0}{1}".format(FileOps.configDir, configName))
 		
@@ -37,7 +37,7 @@ class FileOps():
 		return(FileOps.selectedConfig)
 
 	def generate(self, config):
-		template = ConfigParser(interpolation = ExtendedInterpolation())
+		template = ConfigParser(interpolation = ExtendedInterpolation(), comment_prefixes = None)
 		template.optionxform = str
 		template.read(FileOps.selectedConfig["Type"]["template"])
 
@@ -117,8 +117,7 @@ class FileOps():
 		
 			
 	def genChrArray(text):
-		return text
-		"""	i = 0
+		i = 0
 		newText = ''	
 		for character in text:
 			if i < 31:
@@ -134,5 +133,5 @@ class FileOps():
 		else:
 			newText = newText[0:-5]
 					
-		return(newText)"""
+		return(newText)
 
