@@ -14,12 +14,17 @@ completer = Completer()
 
 class State():
 	prevState = None
+	currentState = None
 	selection = None
 	suppliedVal = None
 	transMap = {}
 	
 	def transition(self, selection, suppliedVal = None):
-		nextState = eval(self.transMap[selection])
+	
+		try:
+			nextState = eval(self.transMap[selection])
+		except KeyError:
+			nextState = eval(self.currentState)
 
 		nextState.selection = selection
 		nextState.suppliedVal = suppliedVal
@@ -33,10 +38,12 @@ class State():
 		readline.set_completer_delims("")
 		readline.parse_and_bind("tab: complete")
 
+
 class Intro(State):
 	transMap = {"help": "Help", "exit": "Exit"}
 
 	def firstRun(self):
+		self.currentState = "Intro" #seed currentState to return here if invalid selection is set, this is auto preformed in transistion() for future states 
 		display.clear()
 		display.init()
 		display.prompt("{0}Enter any key to begin, \"help\", or \"exit\" at any time: {1}".format(display.GREEN, display.ENDC), '')
@@ -67,6 +74,7 @@ class Intro(State):
 		fileOps.loadConfig(selection)
 		self.transition(selection)
 
+
 class ConfigEdit(State):
 	transMap = {"exit": "Exit", "menu": "Intro", "help": "Help", "generate": "GenerationPrompt"}	
 	optionsMap = {}	#will become a dict of {"0": "optionA" "1": "optionB"}
@@ -82,10 +90,11 @@ class ConfigEdit(State):
 		config = fileOps.getCurrentConfig()
 
 		self.parse(config)
-		display.prompt("Select an optionto edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC), '')
+		display.prompt("Select an option to edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC), '')
 
 		selection = input()
-		
+	
+		#Not sure if these checks are needed	
 		if selection.startswith("set "):
 			option = selection.split(" ")[1]
 			self.suppliedVal = selection.split(option+" ", 1)[-1]
@@ -207,7 +216,24 @@ class Help(State):
 		display.clear()
 			
 		if self.prevState == "Intro":
-			display.prompt("Help from Intro")
+			display.prompt("Select a payload module by index ['#'] or name\n\tValid options are:\n")
+		
+			#TODO this is used in multiple states, move it to super	
+			configs = fileOps.getConfigs()
+			for i, f in enumerate(configs):
+				conf = fileOps.loadConfig(f)
+				helpStr = ''
+				numTabs = 1
+				if len(f) < 19: numTabs = 2
+
+				try:
+					helpStr = conf.get("Type", "name")	
+				except Exception:
+					helpStr = ''
+
+				display.prompt("{0}\t[{1}]  {2}{3}{4}{5}".format(display.GREEN, i, f, display.ENDC, '\t'*numTabs, helpStr))
+
+			display.prompt("\nEnter any key to return to module selection")
 
 		elif self.prevState == "ConfigEdit":
 			display.prompt("Help from Config Editor")
