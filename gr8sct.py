@@ -63,7 +63,6 @@ class Intro(State):
 			self.transMap[f] = "ConfigEdit"
 
 		completer.setCommands(list(self.transMap.keys()))
-		#print(completer.commands)
 
 		display.prompt("\nPlease select a module to use: ", '')
 
@@ -89,6 +88,7 @@ class ConfigEdit(State):
 		
 		config = fileOps.getCurrentConfig()
 
+		completer.setCommands(list(self.transMap.keys()))
 		self.parse(config)
 		display.prompt("Select an option to edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC), '')
 
@@ -110,7 +110,7 @@ class ConfigEdit(State):
 			except KeyError:
 				selection = "invalid"
 
-		self.transition(selection, self.suppliedVal)	
+		self.transition(selection, self.suppliedVal)
 			
 
 	def parse(self, config):
@@ -188,7 +188,6 @@ class OptionEdit(State):
 class GenerationPrompt(State):
 
 	def run(self):
-		
 		config = fileOps.getCurrentConfig()
 		t1 = threading.Thread(target = fileOps.generate, args = [config])
 
@@ -202,7 +201,7 @@ class GenerationPrompt(State):
 			i = i+1
 
 		t1.join()
-		display.prompt("{0}Generating: {1} :D{2}".format(display.GREEN, '='*i, display.ENDC))
+		display.prompt("{0}Generating: 8{1}D{2}\n".format(display.GREEN, '='*i, display.ENDC))
 
 		info = config["Type"]["runInfo"]
 		display.prompt("{0}Execute with: {1}".format(display.GREEN, display.ENDC), '')

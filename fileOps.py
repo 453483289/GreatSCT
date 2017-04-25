@@ -75,16 +75,16 @@ class FileOps():
 
 
 		generator = Generator()
-		shellcodex64 = generator.genShellcode(domain, port, "x64")
-		shellcodex86 = generator.genShellcode(domain, port, "x86")
 		
 		for template_section in template:
 			section = template[template_section]
 
 			if template_section == "ShellCodex64":
+				shellcodex64 = generator.genShellcode(domain, port, "x64")
 				section["value"] = shellcodex64
 			
 			elif template_section == "ShellCodex86" or template_section == "ShellCode":
+				shellcodex86 = generator.genShellcode(domain, port, "x86")
 				section["value"] = shellcodex86
 
 			elif template_section == "Processing":
