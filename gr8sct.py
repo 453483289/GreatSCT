@@ -150,6 +150,7 @@ class ConfigAllEdit(State):
 				selection = "invalid"
 
 			selection = option
+			input(selection + " " + self.suppliedVal + " "+ str(self.multipleApplicable))
 		
 		if selection.isdigit():
 			try:
@@ -175,19 +176,28 @@ class ConfigAllEdit(State):
 			if selection == "generate":
 				ConfigAllEdit.genInProgress = True
 				self.generateAll()
+				
+			elif selection in list(self.multipleApplicable.keys()):
+				ConfigAllEdit.multipleSelection = True
+				ConfigAllEdit.multipleOption = selection
+				ConfigAllEdit.setValue = self.suppliedVal
 
-			for i in list(self.optionsMap.keys()):
-				name = selection[:selection.find('.')]
-				option = selection[selection.find('.')+1:]
-				if self.optionsMap[i]["config"] == name and self.optionsMap[i]["option"] == option:
-					for j in self.configMap:
-						try:
-							if j[name]:
-								fileOps.setCurrentConfig(j["config"])
-								selection = option
-								singleSelection = True
-						except KeyError:
-							continue
+			else:
+				for i in list(self.optionsMap.keys()):
+					name = selection[:selection.find('.')]
+					option = selection[selection.find('.')+1:]
+					if self.optionsMap[i]["config"] == name and self.optionsMap[i]["option"] == option:
+						for j in self.configMap:
+							try:
+								if j[name]:
+									fileOps.setCurrentConfig(j["config"])
+									selection = option
+									singleSelection = True
+							except KeyError:
+								continue
+			
+					
+
 
 		if singleSelection:
 			self.transition(selection, self.suppliedVal)
@@ -273,6 +283,7 @@ class ConfigAllEdit(State):
 				self.transition("generate")
 		ConfigAllEdit.genInProgress = False
 		ConfigAllEdit.generationIndex = []
+		self.transition("exit")
 
 class ConfigEdit(State):
 	transMap = {"exit": "Exit", "menu": "Intro", "help": "Help", "generate": "GenerationPrompt"}	
