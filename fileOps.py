@@ -30,6 +30,9 @@ class FileOps():
 		
 		return(FileOps.selectedConfig)
 
+	def setCurrentConfig(self, configObj):
+		FileOps.selectedConfig = configObj
+
 	def updateCurrentConfig(self, option, value):
 		FileOps.selectedConfig[option]["var"] = value	
 

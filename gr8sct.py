@@ -40,7 +40,7 @@ class State():
 
 
 class Intro(State):
-	transMap = {"help": "Help", "exit": "Exit"}
+	transMap = {"help": "Help", "exit": "Exit", "generateAll": "ConfigAllEdit"}
 
 	def firstRun(self):
 		self.currentState = "Intro" #seed currentState to return here if invalid selection is set, this is auto preformed in transistion() for future states 
@@ -62,6 +62,7 @@ class Intro(State):
 			display.prompt(f)
 			self.transMap[f] = "ConfigEdit"
 
+		display.prompt("\n\tor\n\n\t{0}generateAll{1}".format(display.GREEN, display.ENDC))
 		completer.setCommands(list(self.transMap.keys()))
 
 		display.prompt("\nPlease select a module to use: ", '')
@@ -73,6 +74,205 @@ class Intro(State):
 		fileOps.loadConfig(selection)
 		self.transition(selection)
 
+class ConfigAllEdit(State):
+	#This code intentionally obfuscated to prevent IP theft... no really, why are you laughing...
+	#luckily this can be added withouut changing any other code
+	#once there's time an actually designed class with the same inputs/outputs can be swapped in
+
+	transMap = {"exit": "Exit", "menu": "Intro", "help": "Help", "generate": "GenerationPrompt"}
+	optionsMap = {}
+	multipleApplicable = {}
+	configMap = []
+	configsLoaded = False
+	multipleSelection = False
+	multipleOption = ''
+	multipleIndex = []
+	setValue = ''
+	genInProgress = False
+	generationIndex = []
+
+	def run(self):
+		super().run()
+		display.clear()
+		
+		if ConfigAllEdit.genInProgress:
+			self.generateAll()
+
+		display.prompt("Configure all supported payloads for network detection testing\n")
+
+		optionNum = 0
+		if not self.configsLoaded:
+			for config in fileOps.getConfigs():
+				curConfig = fileOps.loadConfig(config)
+				display.prompt("{0}\n{1}\n".format(config, curConfig.get("Type", "name")))
+				optionNum = self.parse(curConfig, optionNum)
+				self.configMap.append({curConfig.get("Type", "info"): config, "config": curConfig}) #sometimes you write a line and it's hard to keep a straight face
+			ConfigAllEdit.configsLoaded = True
+
+		elif self.configsLoaded:
+			name = ''
+			for entry in self.configMap:
+				for i in list(entry.keys()):
+					if i != "config":
+						name = entry[i]
+				curConfig = entry["config"]
+				display.prompt("{0}\n{1}\n".format(name, curConfig.get("Type", "name")))
+				optionNum = self.parse(curConfig, optionNum)
+
+		display.prompt("Or\nSet for all applicable payloads\n")
+
+
+		tempDict = {}
+		for option in self.multipleApplicable:
+			numSpaces = 40
+			numSpaces = numSpaces - (len(str(optionNum))+len(option))
+			display.prompt("\t{0}[{1}] {2}:{3}{4}{5}".format(display.GREEN, optionNum, option, 
+									  display.ENDC, ' '*numSpaces, self.multipleApplicable[option]))
+			tempDict[str(optionNum)] = option
+			optionNum = optionNum+1
+		self.multipleApplicable = {**self.multipleApplicable, **tempDict} #...I have nothing to say for myself
+	
+		
+		display.prompt("\nSelect an option to edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC), '')
+
+		if self.multipleSelection:
+			self.editMultipleEntries()
+	
+		selection = input()
+	
+		singleSelection = False
+	
+		if selection.startswith("set "):
+			option = selection.split(" ")[1]
+			self.suppliedVal = selection.split(option+" ", 1)[-1]
+	
+			if self.suppliedVal == "":
+				selection = "invalid"
+
+			selection = option
+		
+		if selection.isdigit():
+			try:
+				selection = self.optionsMap[selection]
+				singleSelection = True
+				for i in self.configMap:
+					try:
+						if i[selection["config"]]:
+							fileOps.setCurrentConfig(i["config"]) #Donald Knuth forgive me
+					except KeyError:
+						continue
+				selection = selection["option"]
+			except KeyError:
+				try:
+					selection = self.multipleApplicable[selection]
+					ConfigAllEdit.multipleSelection = True
+					ConfigAllEdit.multipleOption = selection
+					ConfigAllEdit.setValue = self.suppliedVal
+				except KeyError:
+					selection = "invalid"
+
+		else: 
+			if selection == "generate":
+				ConfigAllEdit.genInProgress = True
+				self.generateAll()
+
+			for i in list(self.optionsMap.keys()):
+				name = selection[:selection.find('.')]
+				option = selection[selection.find('.')+1:]
+				if self.optionsMap[i]["config"] == name and self.optionsMap[i]["option"] == option:
+					for j in self.configMap:
+						try:
+							if j[name]:
+								fileOps.setCurrentConfig(j["config"])
+								selection = option
+								singleSelection = True
+						except KeyError:
+							continue
+
+		if singleSelection:
+			self.transition(selection, self.suppliedVal)
+		
+		if self.multipleSelection:
+			self.editMultipleEntries()
+
+
+	def editMultipleEntries(self): #Marcus did a bad thing
+			if ConfigAllEdit.setValue == '' or ConfigAllEdit.setValue == None:
+				display.prompt("Please enter a value for "+ConfigAllEdit.multipleOption+": ", '')
+				ConfigAllEdit.setValue = input()
+
+			for option in self.optionsMap:
+				#input(self.optionsMap[option]["option"]+" "+self.optionsMap[option]["config"]+" "+ConfigAllEdit.multipleOption)
+				if self.optionsMap[option]["option"] == ConfigAllEdit.multipleOption:
+					for j in self.configMap:
+						try:
+							if j[self.optionsMap[option]["config"]] not in ConfigAllEdit.multipleIndex:
+								fileOps.setCurrentConfig(j["config"])
+								ConfigAllEdit.multipleIndex.append(j[self.optionsMap[option]["config"]])
+								self.transition(self.multipleOption, ConfigAllEdit.setValue)
+						except KeyError:
+							continue
+			ConfigAllEdit.multipleSelection = False
+			ConfigAllEdit.multipleIndex = []
+			ConfigAllEdit.multipleOption = ''
+			ConfigAllEdit.setValue = ''
+			
+	def parse(self, config, curOptionNum):
+
+		cfgName = ''
+		for section_name in config:
+
+			section = config[section_name]
+			if section_name == "DEFAULT":
+				continue
+
+			if section_name == "Type":
+				cfgName = section["info"]
+				continue
+
+			if section_name == "Output":
+				continue
+			
+
+			#TODO: this dies if one of the cfgs has a .swp file in the same dir
+			numTabs = 50
+			numTabs = numTabs - (len(cfgName)+len(section_name)+len(str(curOptionNum)))
+
+			
+			display.prompt("{0}\t[{1}] {2}.{3}:{4}{5}{6}".format(display.GREEN, curOptionNum, cfgName, section_name, display.ENDC, '-'*numTabs, section["var"]))
+		
+			
+			self.transMap[section_name] = "OptionEdit"
+			self.optionsMap[str(curOptionNum)] = {"config": cfgName, "option": section_name}
+			completer.addCommand(cfgName+'.'+section_name)
+			completer.addCommand("set " + cfgName+'.'+section_name)
+			completer.addCommand("set " + str(curOptionNum))
+			curOptionNum += 1
+			
+			#if list(self.optionsMap.values()).count(section_name) > 1 and section_name not in self.multipleApplicable.values():
+			#	self.multipleApplicable[section_name] = section["var"]
+
+			if section_name not in self.multipleApplicable.values():
+				count = 0
+				for i in list(self.optionsMap.values()):
+					if i["option"] == section_name:
+						count = count+1
+					if count > 1:
+						self.multipleApplicable[section_name] = section["var"]
+
+		display.prompt("")
+
+
+		return(curOptionNum)
+
+	def generateAll(self):
+		for i in self.configMap:
+			if i["config"] not in ConfigAllEdit.generationIndex:
+				fileOps.setCurrentConfig(i["config"])
+				ConfigAllEdit.generationIndex.append(i["config"])
+				self.transition("generate")
+		ConfigAllEdit.genInProgress = False
+		ConfigAllEdit.generationIndex = []
 
 class ConfigEdit(State):
 	transMap = {"exit": "Exit", "menu": "Intro", "help": "Help", "generate": "GenerationPrompt"}	
@@ -143,7 +343,7 @@ class ConfigEdit(State):
 
 
 class OptionEdit(State):
-	transMap = {"exit": "Exit", "ConfigEdit": "ConfigEdit"}
+	transMap = {"exit": "Exit", "ConfigEdit": "ConfigEdit", "ConfigAllEdit": "ConfigAllEdit"}
 
 	validParams = []
 	

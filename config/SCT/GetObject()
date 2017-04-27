@@ -1,4 +1,5 @@
 [Type]
+info: getObject
 name: Get Object
 template: ./template/SCT/getObject.template
 runInfo: mshta.exe script:${Output:var}
@@ -37,5 +38,5 @@ allowWilds: True
 random: True
 
 [Output]
-var: output.sct
+var: getObject.sct
 allowWilds: true
