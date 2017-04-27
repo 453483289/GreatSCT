@@ -94,6 +94,7 @@ class ConfigAllEdit(State):
 	def run(self):
 		super().run()
 		display.clear()
+		completer.setCommands(list(self.transMap.keys()))
 		
 		if ConfigAllEdit.genInProgress:
 			self.generateAll()
@@ -279,6 +280,7 @@ class ConfigAllEdit(State):
 		for i in self.configMap:
 			if i["config"] not in ConfigAllEdit.generationIndex:
 				fileOps.setCurrentConfig(i["config"])
+				i["config"]["Output"]["var"] = "./GenerateAll/" + i["config"]["Output"]["var"]
 				ConfigAllEdit.generationIndex.append(i["config"])
 				self.transition("generate")
 		ConfigAllEdit.genInProgress = False

@@ -47,7 +47,7 @@ class FileOps():
 		return (self.genFromTemplate(template))
 		
 	def genFromTemplate(self, template):
-		processingMap = {"chrEncode": FileOps.genChrArray}
+		processingMap = {"chrEncode": FileOps.genChrArray, "hexArrayEncode": FileOps.genChrArray}
 
 
 		framework = ''
