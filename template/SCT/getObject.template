@@ -1,5 +1,6 @@
 [ShellCode]
 value: notSet
+process: decEncode
 
 [RedirectorDomain]
 value: notSet

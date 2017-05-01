@@ -151,7 +151,6 @@ class ConfigAllEdit(State):
 				selection = "invalid"
 
 			selection = option
-			input(selection + " " + self.suppliedVal + " "+ str(self.multipleApplicable))
 		
 		if selection.isdigit():
 			try:
@@ -177,6 +176,9 @@ class ConfigAllEdit(State):
 			if selection == "generate":
 				ConfigAllEdit.genInProgress = True
 				self.generateAll()
+
+			elif selection == "exit":
+				self.transition(selection)
 				
 			elif selection in list(self.multipleApplicable.keys()):
 				ConfigAllEdit.multipleSelection = True

