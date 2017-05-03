@@ -177,7 +177,8 @@ class ConfigAllEdit(State):
 				ConfigAllEdit.genInProgress = True
 				self.generateAll()
 
-			elif selection == "exit":
+			#TODO: burn this with fire also it exits if you enter a bad option name
+			elif selection == "exit" or selection == "help" or selection == "menu" or selection == "":
 				self.transition(selection)
 				
 			elif selection in list(self.multipleApplicable.keys()):
@@ -387,11 +388,12 @@ class OptionEdit(State):
 		#TODO: Move valid param checking to fileops	
 	def parseOptions(self, option):
 		validParams = []
-	
+
+		#TODO: just found this var, I don't know why it's here	
 		optionString = 	""
 		for validParam in option:
 
-			if validParam == "var":
+			if validParam == "var" or validParam == "help":
 				continue
 
 			validParams.append(validParam)
@@ -424,7 +426,7 @@ class GenerationPrompt(State):
 		
 
 class Help(State):
-	transMap = {"Help": "Help", "Intro": "Intro", "ConfigEdit": "ConfigEdit", "GenerationPrompt": "GenerationPrompt"}
+	transMap = {"Help": "Help", "Intro": "Intro", "ConfigEdit": "ConfigEdit", "ConfigAllEdit": "ConfigAllEdit", "GenerationPrompt": "GenerationPrompt"}
 	
 	def run(self):
 		display.clear()
@@ -447,18 +449,84 @@ class Help(State):
 
 				display.prompt("{0}\t[{1}]  {2}{3}{4}{5}".format(display.GREEN, i, f, display.ENDC, '\t'*numTabs, helpStr))
 
-			display.prompt("\nEnter any key to return to module selection")
+			display.prompt("\n{0}\tgenerateAll{1}\t\t\tGenerate all payloads for network testing".format(display.GREEN, display.ENDC))
+			
 
 		elif self.prevState == "ConfigEdit":
-			display.prompt("Help from Config Editor")
+			config = fileOps.getCurrentConfig()
+			optionNum = 0
+			for section_name in config:
+
+				if section_name == "DEFAULT":
+					continue
+
+				section = config[section_name]
+				if section_name == "Type":
+					display.prompt("The selected payload: {0}{1}{2}\nhas the following options:\n".format(display.GREEN, section["name"], display.ENDC))
+					display.prompt("\tOptionName\t\tDefault Value\t\tAllowed Values")
+
+				else:
+					allowedValSpaces = 24
+					allowedValSpaces = allowedValSpaces-len(str(section["var"]))
+					validParams = []
+				
+					for validParam in section:
+
+						if validParam == "var" or validParam == "help":
+							continue
+
+						validParams.append(validParam)
+					
+					helpStrSpaces = 43-len(str(validParams))
+
+					numTabs = 1
+					if len(section_name) < 12: numTabs = 2
+
+					helpStr = ""
+					try:
+						helpStr = section["help"]
+					except KeyError:
+						helpStr = ""
+
+					display.prompt("{0}\t[{1}] {2}:{3}{4}{5}{6}{7}{8}{9}".format(display.GREEN, optionNum, section_name, display.ENDC, 
+												'\t'*numTabs, section["var"], ' '*allowedValSpaces, str(validParams),
+												' '*helpStrSpaces, helpStr))
+					optionNum += 1
+				
+				section = config[section_name]
+
+			#TODO: just realized we can reuse color vars {0} and {1}, need to apply throughout
+			display.prompt("\nValues may be changed by entering: {0}#{1}, {0}OptionName{1}, {0}set # value{1}, or {0}set OptionName value{1}".format(display.GREEN, display.ENDC))
+
+
+			
+		
+		elif self.prevState == "ConfigAllEdit":
+			display.prompt("The Generate All editor is used to generate all payloads, and an accompanying execution script.")
+			display.prompt("It's primary use is to test the application whitlisting solution on your network against the")
+			display.prompt("newest application whitelisting bypasses.\n")
+
+			display.prompt("After setting each payload for a testing C2 server, {0}generate{1} can be entered.".format(display.GREEN, display.ENDC))
+			display.prompt("The payloads, and an accompanying powershell test script, will be output in ./GenerateAll/")
+			display.prompt("Copy this folder to a testing Windows box and execute the script to see which bypasses you are vulnerable to.")
+			
+	
+			display.prompt("\n\nFor detailed information on each payload's options enter {0}menu{1}, select the payload, then enter {0}help{1}".format(display.GREEN, display.ENDC))
 
 		elif self.prevState == "GenerationPrompt":
-			display.prompt("Help from Generation")
+			display.prompt("Shouldn't be able to get here")
 
 		elif self.prevState == "Help":
-			display.prompt("Help from Help")
+			display.prompt("Shouldn't be able to get here")
 
-		input()
+		display.prompt("\nYou may enter {0}menu{1} at any time to return to the inital payload selection.".format(display.GREEN, display.ENDC))
+		display.prompt("Enter any key to return to the previous menu")
+
+		#hacky
+		selection = input()
+		if selection == "menu":
+			self.prevState = "Intro"
+
 		self.transition(self.prevState)
 
 
