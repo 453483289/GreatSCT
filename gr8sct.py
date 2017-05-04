@@ -46,8 +46,7 @@ class Intro(State):
 		self.currentState = "Intro" #seed currentState to return here if invalid selection is set, this is auto preformed in transistion() for future states 
 		display.clear()
 		display.init()
-		display.prompt("{0}Enter any key to begin, \"help\", or \"exit\" at any time: {1}".format(display.GREEN, display.ENDC), '')
-		input()
+		input("{0}Enter any key to begin, \"help\", or \"exit\" at any time: {1}".format(display.GREEN, display.ENDC))
 		self.run()
 
 	def run(self):
@@ -65,9 +64,9 @@ class Intro(State):
 		display.prompt("\n\tor\n\n\t{0}generateAll{1}".format(display.GREEN, display.ENDC))
 		completer.setCommands(list(self.transMap.keys()))
 
-		display.prompt("\nPlease select a module to use: ", '')
+		#display.prompt("\nPlease select a module to use: ", '')
 
-		selection = input()
+		selection = input("\nPlease select a module to use: ")
 		if selection.isdigit():
 			selection = configs[int(selection)]
 
@@ -105,9 +104,9 @@ class ConfigAllEdit(State):
 		if not self.configsLoaded:
 			for config in fileOps.getConfigs():
 				curConfig = fileOps.loadConfig(config)
-				display.prompt("{0}\n{1}\n".format(config, curConfig.get("Type", "name")))
+				display.prompt("{0}\n{1}\n".format(config, curConfig.get("Type", "info")))
 				optionNum = self.parse(curConfig, optionNum)
-				self.configMap.append({curConfig.get("Type", "info"): config, "config": curConfig}) #sometimes you write a line and it's hard to keep a straight face
+				self.configMap.append({curConfig.get("Type", "name"): config, "config": curConfig}) #sometimes you write a line and it's hard to keep a straight face
 			ConfigAllEdit.configsLoaded = True
 
 		elif self.configsLoaded:
@@ -117,7 +116,7 @@ class ConfigAllEdit(State):
 					if i != "config":
 						name = entry[i]
 				curConfig = entry["config"]
-				display.prompt("{0}\n{1}\n".format(name, curConfig.get("Type", "name")))
+				display.prompt("{0}\n{1}\n".format(name, curConfig.get("Type", "info")))
 				optionNum = self.parse(curConfig, optionNum)
 
 		display.prompt("Or\nSet for all applicable payloads\n")
@@ -134,12 +133,11 @@ class ConfigAllEdit(State):
 		self.multipleApplicable = {**self.multipleApplicable, **tempDict} #...I have nothing to say for myself
 	
 		
-		display.prompt("\nSelect an option to edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC), '')
 
 		if self.multipleSelection:
 			self.editMultipleEntries()
 	
-		selection = input()
+		selection = input("\nSelect an option to edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC))
 	
 		singleSelection = False
 	
@@ -212,8 +210,7 @@ class ConfigAllEdit(State):
 
 	def editMultipleEntries(self): #Marcus did a bad thing
 			if ConfigAllEdit.setValue == '' or ConfigAllEdit.setValue == None:
-				display.prompt("Please enter a value for "+ConfigAllEdit.multipleOption+": ", '')
-				ConfigAllEdit.setValue = input()
+				ConfigAllEdit.setValue = input("Please enter a value for "+ConfigAllEdit.multipleOption+": ")
 
 			for option in self.optionsMap:
 				#input(self.optionsMap[option]["option"]+" "+self.optionsMap[option]["config"]+" "+ConfigAllEdit.multipleOption)
@@ -241,7 +238,7 @@ class ConfigAllEdit(State):
 				continue
 
 			if section_name == "Type":
-				cfgName = section["info"]
+				cfgName = section["name"]
 				continue
 
 			if section_name == "Output":
@@ -306,9 +303,8 @@ class ConfigEdit(State):
 
 		completer.setCommands(list(self.transMap.keys()))
 		self.parse(config)
-		display.prompt("Select an option to edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC), '')
 
-		selection = input()
+		selection = input("Select an option to edit, {0}generate{1}, or {2}exit{3}: ".format(display.GREEN, display.ENDC, display.GREEN, display.ENDC))
 	
 		#Not sure if these checks are needed	
 		if selection.startswith("set "):
@@ -339,7 +335,7 @@ class ConfigEdit(State):
 
 			section = config[section_name]
 			if section_name == "Type":
-				display.prompt("Selected Payload: {0}\n".format(section["name"]))
+				display.prompt("Selected Payload: {0}\n".format(section["info"]))
 
 			else:
 				numTabs = 1
@@ -369,15 +365,17 @@ class OptionEdit(State):
 		self.validParams = self.parseOptions(option)
 
 		if self.suppliedVal == None:
-			display.prompt("Enter a value for [{0}]: (Valid options are: [".format(self.selection), '')
+			outstring = ''
+			outstring = outstring + "Enter a value for [{0}]: (Valid options are: [".format(self.selection)
 			for param in self.validParams:
-				display.prompt("\'{0}{1}{2}\'".format(display.GREEN, param, display.ENDC), '')
+				outstring = outstring + "\'{0}{1}{2}\'".format(display.GREEN, param, display.ENDC)
 				
 				if param != self.validParams[-1]:
-					display.prompt(', ', '')
-			display.prompt("]): ", '')			
+					outstring = outstring + ', '
 
-			self.suppliedVal = input()
+			outstring = outstring + "]): "			
+
+			self.suppliedVal = input(outstring)
 
 		if self.suppliedVal in self.validParams or "allowWilds" in self.validParams:
 			fileOps.updateCurrentConfig(self.selection, self.suppliedVal)
@@ -443,7 +441,7 @@ class Help(State):
 				if len(f) < 19: numTabs = 2
 
 				try:
-					helpStr = conf.get("Type", "name")	
+					helpStr = conf.get("Type", "info")	
 				except Exception:
 					helpStr = ''
 
@@ -462,7 +460,7 @@ class Help(State):
 
 				section = config[section_name]
 				if section_name == "Type":
-					display.prompt("The selected payload: {0}{1}{2}\nhas the following options:\n".format(display.GREEN, section["name"], display.ENDC))
+					display.prompt("The selected payload: {0}{1}{2}\nhas the following options:\n".format(display.GREEN, section["info"], display.ENDC))
 					display.prompt("\tOptionName\t\tDefault Value\t\tAllowed Values")
 
 				else:
@@ -519,11 +517,10 @@ class Help(State):
 		elif self.prevState == "Help":
 			display.prompt("Shouldn't be able to get here")
 
-		display.prompt("\nYou may enter {0}menu{1} at any time to return to the inital payload selection.".format(display.GREEN, display.ENDC))
-		display.prompt("Enter any key to return to the previous menu")
+		display.prompt("\nYou may enter {0}menu{1} at any time to return to the inital payload selection.\n".format(display.GREEN, display.ENDC))
 
 		#hacky
-		selection = input()
+		selection = input("Enter any key to return to the previous menu: ")
 		if selection == "menu":
 			self.prevState = "Intro"
 

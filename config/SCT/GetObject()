@@ -1,6 +1,6 @@
 [Type]
-info: getObject
-name: COM Scriptlet (SCT) using javascript getObject()
+name: getObject
+info: COM Scriptlet (SCT) using javascript getObject()
 template: ./template/SCT/getObject.template
 runInfo: mshta.exe script:${Output:var}
 
@@ -10,12 +10,12 @@ Metasploit: test
 Empire: test
 Cobalt Strike: test
 
-[RedirectorDomain]
+[ListenerDomain]
 var: 127.0.0.1
 allowWilds: True
 help: Your listener domain or IP, can be a redirector
 
-[RedirectorPort]
+[ListenerPort]
 var: 80
 allowWilds: True
 forceInteger: true

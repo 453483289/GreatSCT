@@ -47,7 +47,7 @@ class FileOps():
 		return (self.genFromTemplate(template))
 		
 	def genFromTemplate(self, template):
-		processingMap = {"chrEncode": FileOps.genChrArray, "hexArrayEncode": FileOps.hexArrayEncode}
+		processingMap = {"chrEncode": FileOps.genChrArray}
 
 
 		framework = ''
@@ -71,9 +71,9 @@ class FileOps():
 
 			if config_section == "Framework":
 				framework = FileOps.selectedConfig[config_section]["var"]
-			elif config_section == "RedirectorDomain":
+			elif config_section == "ListenerDomain":
 				domain = FileOps.selectedConfig[config_section]["var"]
-			elif config_section == "RedirectorPort":
+			elif config_section == "ListenerPort":
 				port = FileOps.selectedConfig[config_section]["var"]
 
 
@@ -83,11 +83,23 @@ class FileOps():
 			section = template[template_section]
 
 			if template_section == "ShellCodex64":
-				shellcodex64 = generator.genShellcode(domain, port, "x64", section["process"])
+				extraProcessing = None
+				try:
+					extraProcessing = section["process"]
+				except KeyError:
+					extraProcessing = None
+
+				shellcodex64 = generator.genShellcode(domain, port, "x64", extraProcessing)
 				section["value"] = shellcodex64
 			
 			elif template_section == "ShellCodex86" or template_section == "ShellCode":
-				shellcodex86 = generator.genShellcode(domain, port, "x86", section["process"])
+				extraProcessing = None
+				try:
+					extraProcessing = section["process"]
+				except KeyError:
+					extraProcessing = None
+
+				shellcodex86 = generator.genShellcode(domain, port, "x86", extraProcessing)
 				section["value"] = shellcodex86
 
 			elif template_section == "Processing":
@@ -138,6 +150,4 @@ class FileOps():
 					
 		return(newText)
 
-	def hexArrayEncode(text):
-		return text
 

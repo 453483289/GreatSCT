@@ -30,7 +30,7 @@ class Generator():
 		if shellProcess == 'hexEncode':
 			shellcode = self.hexEncode(shellcode)
 		elif shellProcess == 'decEncode':
-			shellcode = self.chrEncode(shellcode)
+			shellcode = self.decEncode(shellcode)
 
 		return shellcode
 
