@@ -26,14 +26,13 @@ class Generator():
 			code = f.read()
 
 		shellcode = str(code)
-
+		
 		if shellProcess == 'hexEncode':
 			shellcode = self.hexEncode(shellcode)
 		elif shellProcess == 'decEncode':
 			shellcode = self.decEncode(shellcode)
 
 		return shellcode
-
 
 
 
@@ -44,6 +43,7 @@ class Generator():
 		shellcode = shellcode.replace("\"\\n\"", "\n")
 
 		return shellcode
+
 
 	def decEncode(self, shellcode):
 		#currently used for SCT based payloads

